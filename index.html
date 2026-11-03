@@ -87,7 +87,13 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 </div></div>
 <div id="end" style="display:none"><div class="panel"><h2 id="endT"></h2><pre id="endS"></pre><button id="againBtn">BACK TO LOBBY</button><div id="endWait" class="small" style="display:none;margin-top:10px">Waiting for host…</div></div></div>
 
+<script>
+window.addEventListener('error',e=>{const d=document.getElementById('status');if(d)d.textContent='Error: '+(e.message||e)+' — send this to the dev'});
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.THREE||document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
+<script>window.THREE||document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>')</script>
+<script>if(!window.THREE)document.getElementById('status').textContent='3D engine is blocked on this network. Try without ad-block, or another network / phone hotspot.'</script>
 <script>
 window.peerReady=new Promise(res=>{const urls=['https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
  (function next(i){if(window.Peer)return res(true);if(i>=urls.length)return res(false);const s=document.createElement('script');s.src=urls[i];s.onload=()=>window.Peer?res(true):next(i+1);s.onerror=()=>next(i+1);document.head.appendChild(s)})(0)});
@@ -691,7 +697,7 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/
    vm.visible=!p.down&&!p.dead;setVM(p.wep,p.box);vmKick=Math.max(0,vmKick-dt*6);vm.position.set(.26,-.24+Math.sin(bobT*2)*.008,-.42+vmKick*.08);vm.rotation.x=vmKick*(p.wep===1?-1.2:.25)}
   else{vm.visible=false;const t=now/1000;camera.position.set(Math.sin(t*.05)*14,3,18+Math.cos(t*.05)*6);camera.lookAt(0,1.5,3)}}
  else{vm.visible=false;const t=now/1000;camera.position.set(Math.sin(t*.05)*14,3,18+Math.cos(t*.05)*6);camera.lookAt(0,1.5,3);rainTick(dt)}
- if(frame%3===0){const fv=fl.intensity;fl.intensity=0;renderer.setRenderTarget(cctvRT);renderer.render(scene,cctvCam);renderer.setRenderTarget(null);fl.intensity=fv}
+ if(frame%3===0){const fv=fl.intensity;fl.intensity=0;cctvScr.visible=false;renderer.setRenderTarget(cctvRT);renderer.render(scene,cctvCam);renderer.setRenderTarget(null);cctvScr.visible=true;fl.intensity=fv}
  renderer.render(scene,camera)}
 requestAnimationFrame(loop);
 </script>
