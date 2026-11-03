@@ -104,7 +104,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 13. Survive until 6:00 AM. Then do it again tomorrow night. Money, weapons and stock carry over.</pre><div class="small" style="margin-top:12px">[H] close</div></div></div>
 <div id="menu"><div class="panel">
  <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR</div>
- <div id="joinBox"><input id="nm" maxlength="14" placeholder="your name"><button id="joinBtn">CLOCK IN</button></div>
+ <div id="joinBox"><input id="nm" maxlength="14" placeholder="your name"><button id="joinBtn">CLOCK IN</button><button id="privBtn">CREATE PRIVATE ROOM</button><div class="small" id="roomTxt" style="margin-top:8px"></div></div>
  <div id="lobbyBox" style="display:none"><div class="small">ON SHIFT TONIGHT:</div><div id="players"></div>
   <button id="copyBtn">COPY INVITE LINK</button><button id="startBtn">START SHIFT</button><div id="waitTxt" class="small" style="display:none;margin-top:10px">Waiting for the host to start the shift…</div></div>
  <div id="status"></div>
@@ -458,19 +458,26 @@ const ROOM=(qs.get('room')||'main').replace(/[^a-zA-Z0-9]/g,'').slice(0,20)||'ma
 let hh=0;for(const ch of location.host+location.pathname)hh=(hh*31+ch.charCodeAt(0))|0;
 const HOST_ID='nightstop3-'+Math.abs(hh).toString(36)+'-'+ROOM;
 function status(t){$('status').textContent=t}
-async function join(){status('Connecting…');try{peer&&peer.destroy()}catch(e){}
+let ICE=null,fails=0;
+async function iceServers(){if(ICE)return ICE;const list=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:3478'},{urls:'stun:stun.relay.metered.ca:80'}];
+ try{const user=Math.floor(Date.now()/1000+86400)+':nightstop',enc=new TextEncoder();const key=await crypto.subtle.importKey('raw',enc.encode('openrelayprojectsecret'),{name:'HMAC',hash:'SHA-1'},false,['sign']);
+  const sig=await crypto.subtle.sign('HMAC',key,enc.encode(user));const cred=btoa(String.fromCharCode(...new Uint8Array(sig)));
+  list.push({urls:['turn:staticauth.openrelay.metered.ca:80','turn:staticauth.openrelay.metered.ca:80?transport=tcp','turn:staticauth.openrelay.metered.ca:443','turns:staticauth.openrelay.metered.ca:443?transport=tcp'],username:user,credential:cred})}catch(e){}
+ return ICE=list}
+function peerOpts(){return {debug:0,config:{iceServers:ICE||[]}}}
+async function join(){status(fails?'Connecting… (try '+(fails+1)+')':'Connecting…');try{peer&&peer.destroy()}catch(e){}await iceServers();
  const ok=await window.peerReady;
  if(!ok||typeof Peer==='undefined'){status('Multiplayer library is blocked here. Try without ad-block, or another network / phone hotspot.');$('joinBox').style.display='block';return}
- peer=new Peer(HOST_ID,{debug:0});
+ peer=new Peer(HOST_ID,peerOpts());
  peer.on('open',()=>startHost());
  peer.on('error',e=>{if(e.type==='unavailable-id'){try{peer.destroy()}catch(_){}startClient()}else if(!joined){status('Network problem ('+e.type+'). Retrying…');setTimeout(join,2500)}})}
 function startHost(){isHost=true;joined=true;myId='host';conns={};S=freshState();S.players.host=newPlayer(myName,0);status('');
  peer.on('connection',c=>{c.on('open',()=>{conns[c.peer]=c});c.on('data',d=>hostData(c.peer,d));c.on('close',()=>{delete conns[c.peer];if(S)delete S.players[c.peer]});c.on('error',()=>{})});
  peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}})}
-function startClient(){isHost=false;peer=new Peer({debug:0});
+function startClient(){isHost=false;peer=new Peer(peerOpts());
  peer.on('open',id=>{myId=id;conn=peer.connect(HOST_ID,{reliable:true,serialization:'json'});
-  const to=setTimeout(()=>{if(!conn.open){try{peer.destroy()}catch(e){}status('Host not responding. Retrying…');setTimeout(join,1500)}},8000);
-  conn.on('open',()=>{clearTimeout(to);joined=true;conn.send({t:'hi',name:myName});status('')});
+  const to=setTimeout(()=>{if(!conn.open){try{peer.destroy()}catch(e){}fails++;status(fails>=2?'Can\'t reach the host of room "'+ROOM+'". Their game tab may be closed/asleep, or a network is blocking it. Retrying… or click CREATE PRIVATE ROOM and send your friends that link.':'Host not responding. Retrying…');$('joinBox').style.display='block';$('joinBtn').style.display='none';setTimeout(join,2000)}},15000);
+  conn.on('open',()=>{clearTimeout(to);joined=true;fails=0;conn.send({t:'hi',name:myName});status('')});
   conn.on('data',d=>{if(d.t==='s')S=d.s;else if(d.t==='e')onEvent(d.e)});
   conn.on('close',hostLost)});
  peer.on('error',e=>{if(e.type==='peer-unavailable'){try{peer.destroy()}catch(_){}setTimeout(join,1000)}else if(!joined){status('Network problem ('+e.type+'). Retrying…');setTimeout(join,2500)}})}
@@ -750,6 +757,8 @@ document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.00
 
 /* ---------- UI ---------- */
 $('joinBtn').onclick=()=>{myName=($('nm').value.trim()||'Clerk'+Math.floor(Math.random()*99)).slice(0,14);initAudio();if(AC&&AC.state==='suspended')AC.resume();$('joinBox').style.display='none';join()};
+$('privBtn').onclick=()=>{const r=Math.random().toString(36).slice(2,8);location.href=location.pathname+'?room='+r};
+$('roomTxt').textContent='Room: '+ROOM+(ROOM==='main'?' (public — anyone with the link)':' (private)');
 $('nm').addEventListener('keydown',e=>{if(e.key==='Enter')$('joinBtn').click()});
 $('copyBtn').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(location.href).then(()=>{$('copyBtn').textContent='LINK COPIED';setTimeout(()=>$('copyBtn').textContent='COPY INVITE LINK',1500)})};
 $('startBtn').onclick=()=>act('start');
