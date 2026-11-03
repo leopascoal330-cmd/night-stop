@@ -90,13 +90,12 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 <script>
 window.addEventListener('error',e=>{const d=document.getElementById('status');if(d)d.textContent='Error: '+(e.message||e)+' — send this to the dev'});
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="three.min.js"></script>
 <script>window.THREE||document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
-<script>window.THREE||document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>if(!window.THREE)document.getElementById('status').textContent='3D engine is blocked on this network. Try without ad-block, or another network / phone hotspot.'</script>
 <script>
 window.peerReady=new Promise(res=>{const urls=['https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
- (function next(i){if(window.Peer)return res(true);if(i>=urls.length)return res(false);const s=document.createElement('script');s.src=urls[i];s.onload=()=>window.Peer?res(true):next(i+1);s.onerror=()=>next(i+1);document.head.appendChild(s)})(0)});
+ (function next(i){if(window.Peer)return res(true);if(i>=urls.length)return res(false);let done=false;const go=()=>{if(done)return;done=true;window.Peer?res(true):next(i+1)};const s=document.createElement('script');s.src=urls[i];s.onload=go;s.onerror=go;setTimeout(go,7000);document.head.appendChild(s)})(0)});
 </script>
 <script>
 const $=id=>document.getElementById(id);
