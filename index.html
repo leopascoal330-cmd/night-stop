@@ -103,7 +103,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 12. Keep the shelves stocked. Grab boxes from the pallet in the back room. No stock = no sale. The day shift sells stuff too.
 13. Survive until 6:00 AM. Then do it again tomorrow night. Money, weapons and stock carry over.</pre><div class="small" style="margin-top:12px">[H] close</div></div></div>
 <div id="menu"><div class="panel">
- <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR · <span style="color:#666">v7</span></div>
+ <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR · <span style="color:#666">v8</span></div>
  <div id="joinBox"><input id="nm" maxlength="14" placeholder="your name"><button id="joinBtn">CLOCK IN</button><button id="privBtn">CREATE PRIVATE ROOM</button><div class="small" id="roomTxt" style="margin-top:8px"></div></div>
  <div id="lobbyBox" style="display:none"><div class="small">ON SHIFT TONIGHT:</div><div id="players"></div>
   <button id="copyBtn">COPY INVITE LINK</button><button id="startBtn">START SHIFT</button><div id="waitTxt" class="small" style="display:none;margin-top:10px">Waiting for the host to start the shift…</div></div>
@@ -118,10 +118,7 @@ window.addEventListener('error',e=>{let d=document.getElementById('errbox');if(!
 <script src="three.min.js"></script>
 <script>window.THREE||document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>if(!window.THREE)document.getElementById('status').textContent='3D engine is blocked on this network. Try without ad-block, or another network / phone hotspot.'</script>
-<script>
-window.peerReady=new Promise(res=>{const urls=['https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
- (function next(i){if(window.Peer)return res(true);if(i>=urls.length)return res(false);let done=false;const go=()=>{if(done)return;done=true;window.Peer?res(true):next(i+1)};const s=document.createElement('script');s.src=urls[i];s.onload=go;s.onerror=go;setTimeout(go,7000);document.head.appendChild(s)})(0)});
-</script>
+
 <script>
 const $=id=>document.getElementById(id);
 const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)],clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pad=n=>String(n).padStart(2,'0');
@@ -451,47 +448,68 @@ function setVM(w,carry){if(vmWep===w&&vmCarry===carry)return;vm.children.slice()
  if(carry==='mop'){const m=mopMesh();m.rotation.x=-.55;m.position.set(-.05,0,-.05);vm.add(m);return}
  if(w>0){const m=wepMesh(w);if(w===1){m.rotation.x=.9;m.position.set(0,.05,0)}vm.add(m)}}
 
-/* ---------- networking ---------- */
-let peer=null,conn=null,conns={},isHost=false,joined=false,myId=null,myName='',S=null;
+/* ---------- networking (relay server, no direct connections) ---------- */
+// Everyone connects to a public MQTT relay over secure WebSockets. No player's network has to accept incoming connections.
+let mq=null,isHost=false,joined=false,myId=null,myName='',S=null,lastBeacon=0,hostSeen=null,beaconTimer=null,hiTimer=null,watchTimer=null,fails=0;const seenAt={};
 const qs=new URLSearchParams(location.search);
 const ROOM=(qs.get('room')||'main').replace(/[^a-zA-Z0-9]/g,'').slice(0,20)||'main';
 let hh=0;for(const ch of location.host+location.pathname)hh=(hh*31+ch.charCodeAt(0))|0;
-const HOST_ID='nightstop3-'+Math.abs(hh).toString(36)+'-'+ROOM;
+const TOP='nightstop7/'+Math.abs(hh).toString(36)+'/'+ROOM+'/';
+const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://mqtt.eclipseprojects.io:443/mqtt','wss://test.mosquitto.org:8081/mqtt'];
 function status(t){$('status').textContent=t}
-let ICE=null,fails=0;
-async function iceServers(){if(ICE)return ICE;const list=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:3478'},{urls:'stun:stun.relay.metered.ca:80'}];
- try{const user=Math.floor(Date.now()/1000+86400)+':nightstop',enc=new TextEncoder();const key=await crypto.subtle.importKey('raw',enc.encode('openrelayprojectsecret'),{name:'HMAC',hash:'SHA-1'},false,['sign']);
-  const sig=await crypto.subtle.sign('HMAC',key,enc.encode(user));const cred=btoa(String.fromCharCode(...new Uint8Array(sig)));
-  list.push({urls:['turn:staticauth.openrelay.metered.ca:80','turn:staticauth.openrelay.metered.ca:80?transport=tcp','turn:staticauth.openrelay.metered.ca:443','turns:staticauth.openrelay.metered.ca:443?transport=tcp'],username:user,credential:cred})}catch(e){}
- return ICE=list}
-function peerOpts(){return {debug:0,config:{iceServers:ICE||[]}}}
-async function join(){status(fails?'Connecting… (try '+(fails+1)+')':'Connecting…');try{peer&&peer.destroy()}catch(e){}await iceServers();
- const ok=await window.peerReady;
- if(!ok||typeof Peer==='undefined'){status('Multiplayer library is blocked here. Try without ad-block, or another network / phone hotspot.');$('joinBox').style.display='block';return}
- peer=new Peer(HOST_ID,peerOpts());
- peer.on('open',()=>startHost());
- peer.on('error',e=>{if(e.type==='unavailable-id'){try{peer.destroy()}catch(_){}startClient()}else if(!joined){status('Network problem ('+e.type+'). Retrying…');setTimeout(join,2500)}})}
-function startHost(){isHost=true;joined=true;myId='host';conns={};S=freshState();S.players.host=newPlayer(myName,0);status('');
- peer.on('connection',c=>{c.on('open',()=>{conns[c.peer]=c});c.on('data',d=>hostData(c.peer,d));c.on('close',()=>{delete conns[c.peer];if(S)delete S.players[c.peer]});c.on('error',()=>{})});
- peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}})}
-function startClient(){isHost=false;peer=new Peer(peerOpts());
- peer.on('open',id=>{myId=id;conn=peer.connect(HOST_ID,{reliable:true,serialization:'json'});
-  const to=setTimeout(()=>{if(!conn.open){try{peer.destroy()}catch(e){}fails++;status(fails>=2?'Can\'t reach the host of room "'+ROOM+'". Their game tab may be closed/asleep, or a network is blocking it. Retrying… or click CREATE PRIVATE ROOM and send your friends that link.':'Host not responding. Retrying…');$('joinBox').style.display='block';$('joinBtn').style.display='none';setTimeout(join,2000)}},15000);
-  conn.on('open',()=>{clearTimeout(to);joined=true;fails=0;conn.send({t:'hi',name:myName});status('')});
-  conn.on('data',d=>{if(d.t==='s')S=d.s;else if(d.t==='e')onEvent(d.e)});
-  conn.on('close',hostLost)});
- peer.on('error',e=>{if(e.type==='peer-unavailable'){try{peer.destroy()}catch(_){}setTimeout(join,1000)}else if(!joined){status('Network problem ('+e.type+'). Retrying…');setTimeout(join,2500)}})}
-function hostLost(){if(!joined)return;joined=false;S=null;showMsg('HOST LEFT — RECONNECTING',3);try{peer.destroy()}catch(e){}setTimeout(join,600+Math.random()*1800)}
-function bcast(m){for(const id in conns){try{conns[id].send(m)}catch(e){}}}
+// --- tiny MQTT 3.1.1 client (QoS 0) ---
+const enc=new TextEncoder(),dec=new TextDecoder();
+function mqStr(s){const b=enc.encode(s);return [b.length>>8,b.length&255,...b]}
+function mqPkt(h,body){const len=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=128;len.push(d)}while(n>0);return new Uint8Array([h,...len,...body])}
+function MQ(url,cid,onMsg,onOpen,onClose){const ws=new WebSocket(url,'mqtt');ws.binaryType='arraybuffer';let buf=new Uint8Array(0),ping=null,pid=1,open=false;
+ const o={ws,get open(){return open},
+  sub(t){const id=pid++;ws.send(mqPkt(0x82,[id>>8,id&255,...mqStr(t),0]))},
+  pub(t,str){if(ws.readyState!==1)return;ws.send(mqPkt(0x30,[...mqStr(t),...enc.encode(str)]))},
+  close(){clearInterval(ping);try{ws.close()}catch(e){}}};
+ ws.onopen=()=>{ws.send(mqPkt(0x10,[...mqStr('MQTT'),4,2,0,30,...mqStr(cid)]));ping=setInterval(()=>{if(ws.readyState===1)ws.send(new Uint8Array([0xC0,0]))},15000)};
+ ws.onmessage=ev=>{const nb=new Uint8Array(ev.data),m=new Uint8Array(buf.length+nb.length);m.set(buf);m.set(nb,buf.length);buf=m;
+  while(buf.length>=2){let mul=1,len=0,i=1,b;do{if(i>=buf.length)return;b=buf[i++];len+=(b&127)*mul;mul*=128}while(b&128);if(buf.length<i+len)return;
+   const h=buf[0],body=buf.slice(i,i+len);buf=buf.slice(i+len);const type=h>>4;
+   if(type===2){if(body[1]===0){open=true;onOpen()}else{onClose()}}
+   else if(type===3){const tl=(body[0]<<8)|body[1],topic=dec.decode(body.slice(2,2+tl)),qos=(h>>1)&3;const payload=dec.decode(body.slice(2+tl+(qos?2:0)));onMsg(topic,payload,h&1)}}};
+ ws.onclose=()=>{clearInterval(ping);const was=open;open=false;onClose(was)};ws.onerror=()=>{};
+ return o}
+function send(t,obj){if(mq)mq.pub(TOP+t,JSON.stringify(obj))}
+function bcast(m){m.hid=myId;send('h',m)}
+function toHost(m){m.f=myId;send('c',m)}
 function fire(e){onEvent(e);bcast({t:'e',e})}
-function act(a,v){if(isHost)hostAction('host',a,v);else if(conn&&conn.open)conn.send({t:'a',a,v})}
+function act(a,v){if(isHost)hostAction('host',a,v);else toHost({t:'a',a,v})}
+function onMq(topic,payload,retain){let d;try{d=JSON.parse(payload)}catch(e){return}const k=topic.slice(TOP.length);
+ if(k==='b'){if(retain||d.id===myId)return;
+  if(isHost&&joined){if(d.id<myId){stepDown()}return}
+  lastBeacon=performance.now();hostSeen=d.id;return}
+ if(k==='h'){if(isHost||d.hid!==hostSeen)return;if(d.t==='s')S=d.s;else if(d.t==='e')onEvent(d.e);return}
+ if(k==='c'&&isHost&&d.f){seenAt[d.f]=performance.now();hostData(d.f,d)}}
+async function connectRelay(){if(mq&&mq.open)return true;
+ for(const url of BROKERS){status('Connecting to game server…');const ok=await new Promise(res=>{let done=false;const fin=v=>{if(!done){done=true;res(v)}};
+   mq=MQ(url,myId,onMq,()=>fin(true),was=>{fin(false);if(was)relayLost()});setTimeout(()=>fin(false),6000)});
+  if(ok){mq.sub(TOP+'b');mq.sub(TOP+'h');mq.sub(TOP+'c');return true}try{mq.close()}catch(e){}mq=null}
+ return false}
+async function join(){myId=myId||('p'+Math.random().toString(36).slice(2,10));
+ if(!await connectRelay()){fails++;status('Can\'t reach the game server from this network (school/work Wi-Fi often blocks it). Try a phone hotspot. Retrying…');setTimeout(join,4000);return}
+ status('Looking for the lobby in room "'+ROOM+'"…');lastBeacon=0;hostSeen=null;
+ await new Promise(r=>setTimeout(r,2600+Math.random()*900));
+ if(lastBeacon&&performance.now()-lastBeacon<3000)startClient();else startHost()}
+function startHost(){isHost=true;joined=true;S=freshState();S.players.host=newPlayer(myName,0);status('');
+ clearInterval(beaconTimer);beaconTimer=setInterval(()=>{send('b',{id:myId});const now=performance.now();for(const id in S.players){if(id!=='host'&&seenAt[id]&&now-seenAt[id]>9000){delete S.players[id];delete seenAt[id]}}},1000);send('b',{id:myId})}
+function startClient(){isHost=false;joined=true;status('');clearInterval(beaconTimer);
+ clearInterval(hiTimer);const hi=()=>{if(!S||!S.players[myId])toHost({t:'hi',name:myName});else clearInterval(hiTimer)};hi();hiTimer=setInterval(hi,1500);
+ clearInterval(watchTimer);watchTimer=setInterval(()=>{if(joined&&!isHost&&performance.now()-lastBeacon>6500)hostLost()},1000)}
+function stepDown(){clearInterval(beaconTimer);isHost=false;joined=false;S=null;showMsg('TWO LOBBIES MERGED — REJOINING',2.5);setTimeout(join,500)}
+function hostLost(){if(!joined||isHost)return;joined=false;S=null;clearInterval(watchTimer);showMsg('HOST LEFT — A NEW HOST TAKES OVER',3);setTimeout(join,300+Math.random()*1200)}
+function relayLost(){joined=false;S=null;isHost=false;clearInterval(beaconTimer);clearInterval(watchTimer);mq=null;showMsg('LOST CONNECTION TO THE SERVER — RECONNECTING',3);$('menu').style.display='flex';setTimeout(join,1500)}
 
 /* ---------- host: setup ---------- */
 function freshState(){return {phase:'lobby',night:1,t:0,money:60,strikes:0,cust:null,next:6,lightsOut:false,brk:{who:null,p:0},evT:20,players:{},reason:'',hunters:[],ret:[],stock:[4,4,4,4,4,4,4,4],phone:null,queued:null,drainT:45,kills:0,served:0,mess:[],mt:0,report:'',up:{},autoPow:0,reviews:[{s:4,t:'Open all night, decent coffee.',n:'Mark H.'},{s:3,t:'It\'s a gas station. It was fine.',n:'Ida B.'},{s:2,t:'Night clerk looked at my ID for like a full minute.',n:'Paul C.'}]}}
 function newPlayer(name,i){const col=PCOL[i%PCOL.length];return {name,col,x:-1+rnd(-.8,.8),z:-1.4,ry:Math.PI,rx:0,fl:1,wep:0,mag:0,res:0,rl:0,med:0,hol:false,carry:null,down:false,bleed:0,dead:false,rev:null,revP:0,cl:null,clP:0,cd:0,
  look:{h:+rnd(1.7,1.88).toFixed(2),skin:pick(SKIN),hairC:pick(HAIR)[0],bald:false,beard:Math.random()<.3,glasses:false,cast:false,eyepatch:false,jacket:col,shirt:'#d8d8d0',pants:'#22263a',shoes:'#141414',eyeC:'#3a2410',hat:true,hatC:'#1a1a1a',top:'jacket',hs:'short',age:30,stubble:Math.random()<.5}}}
 function hostData(id,d){if(!S)return;
- if(d.t==='hi'){S.players[id]=newPlayer(String(d.name||'Clerk').slice(0,14),Object.keys(S.players).length)}
+ if(d.t==='hi'){if(!S.players[id])S.players[id]=newPlayer(String(d.name||'Clerk').slice(0,14),Object.keys(S.players).length)}
  else if(d.t==='p'){const p=S.players[id];if(p){p.x=+d.x||0;p.z=+d.z||0;p.ry=+d.ry||0;p.rx=+d.rx||0;p.fl=d.fl?1:0}}
  else if(d.t==='a')hostAction(id,d.a,d.v)}
 const FN=['Mark','Linda','Erik','Sara','Tom','Nina','Jonas','Ida','Paul','Grace','Lars','Mia','Victor','Helen','Owen','Ruth','Kai','Emma','Dale','Vera','Frank','Agnes','Leon','Tess','Hugo','Clara','Ben','Rosa'];
@@ -897,8 +915,8 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/
  if(localCd>0)localCd-=dt;
  if(joined&&S){const play=S.phase==='playing',p=S.players[myId];
   if(play)movePlayer(dt);
-  if(isHost){if(p){p.x=me.x;p.z=me.z;p.ry=yaw;p.rx=pitch;p.fl=flOn?1:0}hostTick(dt);netT+=dt;if(netT>.066){netT=0;bcast({t:'s',s:S})}}
-  else{netT+=dt;if(netT>.066){netT=0;if(conn&&conn.open)conn.send({t:'p',x:me.x,z:me.z,ry:yaw,rx:pitch,fl:flOn?1:0})}}
+  if(isHost){if(p){p.x=me.x;p.z=me.z;p.ry=yaw;p.rx=pitch;p.fl=flOn?1:0}hostTick(dt);netT+=dt;if(netT>.1){netT=0;bcast({t:'s',s:S})}}
+  else{netT+=dt;if(netT>.1){netT=0;toHost({t:'p',x:+me.x.toFixed(2),z:+me.z.toFixed(2),ry:+yaw.toFixed(3),rx:+pitch.toFixed(3),fl:flOn?1:0})}}
   const hd=updateWorld(dt,now);updateHUD();
   if(play&&p){const t=now/1000,bob=p.down||p.dead?0:Math.min(1,moveAmt),ey=p.dead?1.7:p.down?.45:1.6;
    const side=Math.sin(bobT)*.035*bob,up=Math.abs(Math.sin(bobT))*.055*bob+Math.sin(t*1.3)*.006;
