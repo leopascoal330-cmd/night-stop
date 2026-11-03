@@ -103,7 +103,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 12. Keep the shelves stocked. Grab boxes from the pallet in the back room. No stock = no sale. The day shift sells stuff too.
 13. Survive until 6:00 AM. Then do it again tomorrow night. Money, weapons and stock carry over.</pre><div class="small" style="margin-top:12px">[H] close</div></div></div>
 <div id="menu"><div class="panel">
- <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR</div>
+ <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR · <span style="color:#666">v7</span></div>
  <div id="joinBox"><input id="nm" maxlength="14" placeholder="your name"><button id="joinBtn">CLOCK IN</button><button id="privBtn">CREATE PRIVATE ROOM</button><div class="small" id="roomTxt" style="margin-top:8px"></div></div>
  <div id="lobbyBox" style="display:none"><div class="small">ON SHIFT TONIGHT:</div><div id="players"></div>
   <button id="copyBtn">COPY INVITE LINK</button><button id="startBtn">START SHIFT</button><div id="waitTxt" class="small" style="display:none;margin-top:10px">Waiting for the host to start the shift…</div></div>
@@ -113,7 +113,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 <div id="end" style="display:none"><div class="panel"><h2 id="endT"></h2><pre id="endS"></pre><button id="againBtn">BACK TO LOBBY</button><div id="endWait" class="small" style="display:none;margin-top:10px">Waiting for host…</div></div></div>
 
 <script>
-window.addEventListener('error',e=>{const d=document.getElementById('status');if(d)d.textContent='Error: '+(e.message||e)+' — send this to the dev'});
+window.addEventListener('error',e=>{let d=document.getElementById('errbox');if(!d){d=document.createElement('div');d.id='errbox';d.style.cssText='position:fixed;left:10px;right:10px;bottom:10px;z-index:99;background:#300;color:#fbb;font:13px monospace;padding:10px;border:1px solid #a33;white-space:pre-wrap';document.body.appendChild(d)}d.textContent+='ERROR: '+(e.message||e)+' (line '+(e.lineno||'?')+')\n'});
 </script>
 <script src="three.min.js"></script>
 <script>window.THREE||document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
