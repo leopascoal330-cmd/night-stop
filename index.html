@@ -30,9 +30,32 @@ html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:"Cour
 #idcard canvas{width:96px;height:120px;image-rendering:pixelated;border:1px solid #666;flex:none}
 #idcard b{display:block;font-size:10px;color:#666;margin-top:3px}
 #idq{margin-top:8px;font-size:12px;color:#444;border-top:1px solid #998;padding-top:6px;line-height:1.5}
-#shop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,92vw);background:#06140a;border:2px solid #2a6a3a;color:#7cf09a;padding:18px;display:none;pointer-events:none;box-shadow:0 0 50px #000;text-shadow:0 0 6px rgba(80,255,120,.4)}
-#shop h3{margin:0 0 10px;letter-spacing:3px}
-#shop div{padding:3px 0}#shop .rv{font-size:13px;opacity:.9;border-bottom:1px dashed #1f4a2a;padding:5px 0}
+#shop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:6;font-family:Tahoma,Verdana,sans-serif;cursor:default;user-select:none}
+#pcScreen{width:min(880px,96vw);height:min(580px,92vh);background:#0b4a50 radial-gradient(ellipse at 30% 20%,#1a7078,#062a30);border:16px solid #262624;border-radius:12px;box-shadow:0 0 0 3px #111,inset 0 0 60px rgba(0,0,0,.6),0 20px 80px #000;display:flex;flex-direction:column;overflow:hidden;position:relative}
+#pcScreen:after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px)}
+#pcWin{margin:16px 18px 8px;flex:1;background:#c6c6be;border:2px solid;border-color:#fff #555 #555 #fff;display:flex;flex-direction:column;min-height:0;box-shadow:4px 4px 0 rgba(0,0,0,.35)}
+#pcBar{background:linear-gradient(90deg,#16306a,#4a78b8);color:#fff;font-weight:bold;padding:4px 6px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
+#pcX{width:22px;height:18px;margin:0;padding:0;background:#c6c6be;color:#111;border:2px solid;border-color:#fff #555 #555 #fff;font:bold 11px Tahoma,sans-serif;letter-spacing:0;line-height:10px;cursor:pointer}
+#pcX:hover{background:#d8d8d0;border-color:#fff #555 #555 #fff}
+#pcBody{flex:1;display:flex;min-height:0}
+#pcSide{width:180px;background:#b2b2aa;border-right:2px solid #888;padding:8px;flex:none}
+.tab{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:#c6c6be;color:#111;border:2px solid;border-color:#fff #666 #666 #fff;margin:0 0 7px;padding:9px 8px;font:13px Tahoma,sans-serif;letter-spacing:0;cursor:pointer}
+.tab:hover{background:#d6d6ce;border-color:#fff #666 #666 #fff}
+.tab.on,.tab.on:hover{background:#16306a;color:#fff;border-color:#555 #fff #fff #555}
+.ico{width:18px;height:18px;flex:none;border:1px solid #333;display:inline-block}
+#pcMain{flex:1;overflow:auto;padding:12px;color:#111;font-size:13px}
+#pcMain h4{margin:0 0 10px;font-size:15px;display:flex;justify-content:space-between}
+.card{background:#ecece4;border:2px solid;border-color:#fff #888 #888 #fff;padding:9px 11px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.card b{font-size:14px}.card small{display:block;color:#555;margin-top:2px}
+.buy{width:auto;margin:0;padding:7px 14px;background:#c6c6be;color:#111;border:2px solid;border-color:#fff #555 #555 #fff;font:bold 12px Tahoma,sans-serif;letter-spacing:0;cursor:pointer;white-space:nowrap}
+.buy:hover{background:#dcdcd4;border-color:#fff #555 #555 #fff}
+.buy:active{border-color:#555 #fff #fff #555}
+.buy[disabled],.buy[disabled]:hover{color:#8a8a84;background:#c6c6be;cursor:default}
+.rv{background:#fff;border:1px solid #999;padding:7px 9px;margin-bottom:6px}
+.st{color:#c08000;letter-spacing:1px}
+#pcTask{height:30px;background:#c6c6be;border-top:2px solid #fff;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:12px;color:#111;flex:none}
+#pcTask span{border:2px solid;border-color:#fff #555 #555 #fff;padding:2px 10px;font-weight:bold}
+#pcTask i{font-style:normal;border:1px solid;border-color:#777 #fff #fff #777;padding:2px 10px}
 #rules,#menu,#end{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8)}
 #rules{display:none;z-index:5;pointer-events:none}
 .panel{width:min(600px,92vw);border:1px solid #444;background:rgba(8,8,10,.93);padding:26px;box-shadow:0 0 60px #000;max-height:94vh;overflow:auto}
@@ -65,7 +88,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 <div id="focus">CLICK TO CONTROL</div>
 <div id="idcard"><h3>STATE IDENTIFICATION</h3><div class="row"><canvas id="photo" width="80" height="100"></canvas><div><b>NAME</b><span id="idName"></span><b>DATE OF BIRTH</b><span id="idDob"></span><b>EXPIRES</b><span id="idExp"></span><b>HEIGHT · HAIR · EYES</b><span id="idBody"></span><b>NOTES</b><span id="idNote"></span></div></div>
 <div id="idq">[3] Where are you headed? &nbsp; [4] <span id="q4"></span><br>[5] When's your birthday? &nbsp; [1] SERVE &nbsp; [2] REFUSE &nbsp; [E] close</div></div>
-<div id="shop"><h3 id="pcTitle">&gt; NIGHT STOP OFFICE PC</h3><div id="shopList"></div><div id="pcHelp" style="margin-top:10px;font-size:12px;opacity:.7"></div></div>
+<div id="shop"><div id="pcScreen"><div id="pcWin"><div id="pcBar"><span>NightStop Manager 2.1</span><button id="pcX" title="Log off">X</button></div><div id="pcBody"></div></div><div id="pcTask"><span>START</span><i id="pcClock"></i></div></div></div>
 <div id="rules"><div class="panel"><h2>EMPLOYEE NOTICE</h2><pre>1. Serve every customer who is a person.
 2. Some things that come in after midnight are NOT people. Management calls them HOLLOWS.
 3. Every ID lists HEIGHT, HAIR, EYES and NOTES (broken leg, glasses, eyepatch, beard…). LOOK AT THE CUSTOMER. Does it match?
@@ -622,15 +645,24 @@ function drawPhoto(c){const g=$('photo').getContext('2d'),l=c.idl,ph=c.anom==='p
 function openID(){const c=S.cust,l=c.idl;idOpen=true;idFor=c.id;$('idName').textContent=c.first+' '+(c.anom==='name'?c.first:c.last);$('idDob').textContent=pad(c.dob[0])+'.'+pad(c.dob[1])+'.'+c.dob[2];$('idExp').textContent=c.exp;
  $('idBody').textContent=l.h.toFixed(2)+' m · '+(l.bald?'Bald':l.hairN)+' · '+l.eyeN;$('idNote').textContent=idNote(l);$('q4').textContent=q4Text(l);drawPhoto(c);$('idcard').style.display='block';SFX.click()}
 function closeID(){idOpen=false;$('idcard').style.display='none'}
-function renderPC(){const t=pcTab;let h='',help='';
- if(t==='main'){h='<div>[1] CUSTOMER REVIEWS ('+rating().toFixed(1)+' ★)</div><div>[2] WEAPONS & GEAR</div><div>[3] STORE UPGRADES</div><div>[4] RESTOCK DELIVERIES</div><div style="margin-top:8px;opacity:.7">REGISTER: $'+S.money+'</div>';help='[1-4] open · [E] log off'}
- else if(t==='rev'){h='<div>AVERAGE: '+'★'.repeat(Math.round(rating()))+'☆'.repeat(5-Math.round(rating()))+' '+rating().toFixed(1)+' · better rating = bigger tips</div>'+S.reviews.slice(0,7).map(r=>'<div class="rv">'+'★'.repeat(r.s)+'☆'.repeat(5-r.s)+' — '+esc(r.t)+' <span style="opacity:.6">('+esc(r.n)+')</span></div>').join('');help='[0] back · [E] log off'}
- else{const list=PC[t];h=list.map((it,i)=>'<div>['+(i+1)+'] '+it.n+' ...... '+(t==='dec'&&S.up[it.k]?'INSTALLED':'$'+it.p)+'</div>').join('')+'<div style="margin-top:8px;opacity:.7">REGISTER: $'+S.money+'</div>';help='[1-'+list.length+'] buy · [0] back · [E] log off'}
- setH($('shopList'),h);$('pcHelp').textContent=help;$('pcTitle').textContent='> OFFICE PC'+({main:'',rev:' / REVIEWS',wep:' / WEAPONS',dec:' / UPGRADES',stk:' / DELIVERIES'})[t]}
-function openShop(){shopOpen=true;pcTab='main';renderPC();$('shop').style.display='block';SFX.click()}
-function closeShop(){shopOpen=false;$('shop').style.display='none'}
+const PCTABS=[['rev','Reviews','#e8b020'],['wep','Weapons & Gear','#a03030'],['dec','Store Upgrades','#3a8a40'],['stk','Deliveries','#3060b0']];
+function renderPC(){if(pcTab==='main')pcTab='rev';const t=pcTab,p=S.players[myId]||{};let m='';
+ const side=PCTABS.map(([k,n,c])=>'<button class="tab'+(k===t?' on':'')+'" data-tab="'+k+'"><span class="ico" style="background:'+c+'"></span>'+n+'</button>').join('')+'<div style="margin-top:14px;font-size:12px;color:#333">Register<br><b style="font-size:18px">$'+S.money+'</b></div><div style="margin-top:10px;font-size:12px;color:#333">Rating<br><b class="st" style="font-size:16px">'+'★'.repeat(Math.round(rating()))+'☆'.repeat(5-Math.round(rating()))+'</b> '+rating().toFixed(1)+'</div>';
+ if(t==='rev')m='<h4><span>Customer Reviews</span><span class="st">'+rating().toFixed(1)+' ★</span></h4><div style="margin-bottom:10px;color:#555">Higher rating = bigger payments. Keep shelves full, serve fast, keep the floor clean, decorate.</div>'+S.reviews.slice(0,10).map(r=>'<div class="rv"><span class="st">'+'★'.repeat(r.s)+'☆'.repeat(5-r.s)+'</span> &nbsp;'+esc(r.t)+'<small style="display:block;color:#777;margin-top:2px">— '+esc(r.n)+'</small></div>').join('');
+ else{const title={wep:'Weapons & Gear',dec:'Store Upgrades',stk:'Restock Deliveries'}[t];
+  m='<h4><span>'+title+'</span><span>$'+S.money+'</span></h4>'+PC[t].map((it,i)=>{const [nm,ds]=it.n.split(' (');let owned=t==='dec'&&S.up[it.k],extra='';
+   if(t==='wep'&&i<3&&p.wep===i+1){extra=' · EQUIPPED'}if(t==='stk')extra=' · '+it.s.map(k=>SEC[k].n.toLowerCase()+' '+S.stock[k]+'/4').join(', ');
+   const dis=owned||S.money<it.p;return '<div class="card"><div><b>'+nm+'</b><small>'+(ds?ds.replace(')',''):'')+extra+'</small></div><button class="buy" data-buy="'+t+':'+i+'"'+(dis?' disabled':'')+'>'+(owned?'INSTALLED':'BUY $'+it.p)+'</button></div>'}).join('')}
+ setH($('pcBody'),'<div id="pcSide">'+side+'</div><div id="pcMain">'+m+'</div>');
+ if(S.phase==='playing'){const h=Math.floor(S.t/HOUR),mm=Math.floor((S.t%HOUR)/HOUR*60);$('pcClock').textContent='NIGHT '+S.night+' · '+(h===0?12:h)+':'+pad(mm)+' AM'}}
+function openShop(){shopOpen=true;pcTab='rev';$('pcBody')._h=null;renderPC();$('shop').style.display='flex';SFX.click();if(document.pointerLockElement)document.exitPointerLock()}
+function closeShop(relock){shopOpen=false;$('shop').style.display='none';if(relock&&S&&S.phase==='playing')try{canvas.requestPointerLock()}catch(e){}}
+$('shop').addEventListener('click',e=>{const x=e.target.closest('[data-tab],[data-buy],#pcX');if(!x)return;
+ if(x.id==='pcX'){closeShop(true);SFX.click();return}
+ if(x.dataset.tab){pcTab=x.dataset.tab;renderPC();SFX.click();return}
+ if(x.dataset.buy&&!x.disabled){act('buy',x.dataset.buy);setTimeout(renderPC,120)}});
 function interact(){const p=S.players[myId];if(!p||p.dead)return;
- if(shopOpen){closeShop();return}
+ if(shopOpen){closeShop(true);return}
  if(p.down){if(p.med>0)act('selfrev');return}
  if(nearDowned()){act('revive');return}
  if(S.lightsOut&&nearBreaker()){act('breaker');return}
@@ -650,17 +682,15 @@ addEventListener('keydown',e=>{K[e.code]=true;if(!joined||!S)return;
  if(S.phase!=='playing')return;const p=S.players[myId];
  if(e.code==='KeyF'){flOn=!flOn;SFX.click()}
  if(!p||p.dead)return;
- if(e.code==='KeyE')interact();
+ if(e.code==='KeyE'||(e.code==='Escape'&&shopOpen)){if(shopOpen){closeShop(e.code==='KeyE');SFX.click();return}interact()}
  if(e.code==='KeyQ')act('hol');
  const n=+e.code.replace('Digit','');
- if(shopOpen){if(e.code==='Digit0'||e.code==='Backspace'){pcTab='main';renderPC();SFX.click();return}
-  if(pcTab==='main'&&n>=1&&n<=4){pcTab=['rev','wep','dec','stk'][n-1];renderPC();SFX.click();return}
-  if(PC[pcTab]&&n>=1&&n<=PC[pcTab].length){act('buy',pcTab+':'+(n-1));return}return}
+ if(shopOpen)return;
  if(e.code==='KeyR')act('reload');
  if(p.down)return;
  if(S.cust&&S.cust.st==='wait'&&nearCounter()){if(n===1||n===2){act(n===1?'serve':'refuse');closeID()}else if(n>=3&&n<=5)act('ask',n)}});
 addEventListener('keyup',e=>{K[e.code]=false});
-canvas.addEventListener('mousedown',e=>{if(!joined||!S||S.phase!=='playing')return;if(!locked){canvas.requestPointerLock();return}if(e.button===0)attack()});
+canvas.addEventListener('mousedown',e=>{if(!joined||!S||S.phase!=='playing'||shopOpen)return;if(!locked){canvas.requestPointerLock();return}if(e.button===0)attack()});
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas});
 document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.0022;pitch=clamp(pitch-e.movementY*.0022,-1.4,1.4);swayX=clamp(swayX+e.movementX*.0003,-.04,.04);swayY=clamp(swayY+e.movementY*.0003,-.04,.04)});
 
@@ -699,7 +729,7 @@ function updateHUD(){const s=S,play=s.phase==='playing',p=s.players[myId];
  let bp=-1;if(play&&p){if(s.lightsOut&&s.brk.who===myId)bp=s.brk.p/4;else if(p.rev)bp=p.revP/3;else if(p.cl){const m=s.mess.find(x=>x.id===p.cl);if(m)bp=p.clP/(m.body?4:2.5)}}
  $('bar').style.display=bp>=0?'block':'none';if(bp>=0)$('bar').firstChild.style.width=(bp*100)+'%';
  const dt=play&&p&&(p.down||p.dead);$('down').style.display=dt?'block':'none';if(dt)setH($('down'),p.dead?'DEAD — SPECTATING UNTIL MORNING':'DOWN — BLEEDING OUT '+Math.ceil(p.bleed)+'s · CRAWL TO A TEAMMATE'+(p.med?' · [E] USE MEDKIT':''));
- $('focus').style.display=play&&!locked?'block':'none';
+ $('focus').style.display=play&&!locked&&!shopOpen?'block':'none';
  $('menu').style.display=s.phase==='lobby'?'flex':'none';
  if(s.phase==='lobby'){$('lobbyBox').style.display='block';setH($('players'),Object.values(s.players).map(q=>'<div style="color:'+q.col+'">▸ '+esc(q.name)+'</div>').join(''));$('startBtn').style.display=isHost?'block':'none';$('waitTxt').style.display=isHost?'none':'block'}
  const end=s.phase==='morning'||s.phase==='lose';$('end').style.display=end?'flex':'none';
