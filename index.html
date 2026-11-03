@@ -32,7 +32,7 @@ html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:"Cour
 #idq{margin-top:8px;font-size:12px;color:#444;border-top:1px solid #998;padding-top:6px;line-height:1.5}
 #shop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,92vw);background:#06140a;border:2px solid #2a6a3a;color:#7cf09a;padding:18px;display:none;pointer-events:none;box-shadow:0 0 50px #000;text-shadow:0 0 6px rgba(80,255,120,.4)}
 #shop h3{margin:0 0 10px;letter-spacing:3px}
-#shop div{padding:3px 0}
+#shop div{padding:3px 0}#shop .rv{font-size:13px;opacity:.9;border-bottom:1px dashed #1f4a2a;padding:5px 0}
 #rules,#menu,#end{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8)}
 #rules{display:none;z-index:5;pointer-events:none}
 .panel{width:min(600px,92vw);border:1px solid #444;background:rgba(8,8,10,.93);padding:26px;box-shadow:0 0 60px #000;max-height:94vh;overflow:auto}
@@ -65,7 +65,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 <div id="focus">CLICK TO CONTROL</div>
 <div id="idcard"><h3>STATE IDENTIFICATION</h3><div class="row"><canvas id="photo" width="80" height="100"></canvas><div><b>NAME</b><span id="idName"></span><b>DATE OF BIRTH</b><span id="idDob"></span><b>EXPIRES</b><span id="idExp"></span><b>HEIGHT · HAIR · EYES</b><span id="idBody"></span><b>NOTES</b><span id="idNote"></span></div></div>
 <div id="idq">[3] Where are you headed? &nbsp; [4] <span id="q4"></span><br>[5] When's your birthday? &nbsp; [1] SERVE &nbsp; [2] REFUSE &nbsp; [E] close</div></div>
-<div id="shop"><h3>&gt; NIGHT STOP SUPPLY TERMINAL</h3><div id="shopList"></div><div style="margin-top:10px;font-size:12px;opacity:.7">[1-5] buy · [E] log off · money comes from the register</div></div>
+<div id="shop"><h3 id="pcTitle">&gt; NIGHT STOP OFFICE PC</h3><div id="shopList"></div><div id="pcHelp" style="margin-top:10px;font-size:12px;opacity:.7"></div></div>
 <div id="rules"><div class="panel"><h2>EMPLOYEE NOTICE</h2><pre>1. Serve every customer who is a person.
 2. Some things that come in after midnight are NOT people. Management calls them HOLLOWS.
 3. Every ID lists HEIGHT, HAIR, EYES and NOTES (broken leg, glasses, eyepatch, beard…). LOOK AT THE CUSTOMER. Does it match?
@@ -73,7 +73,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 5. Ask questions [3][4][5]. People answer like people. Hollows don't.
 6. Refuse Hollows. Refusing a real customer = complaint. 3 complaints = fired.
 7. If you SERVE a Hollow it leaves… and comes back later tonight to kill you. The power will die. Fix the breaker in the BACK ROOM. Light burns them.
-8. Buy weapons and medkits at the SUPPLY TERMINAL in the back room with register money.
+8. The OFFICE PC in the back room: read customer reviews, buy weapons, store upgrades and restock deliveries. Better reviews = bigger tips. [R] reloads your gun.
 9. Get hit and you go down. A teammate can revive you [E]. Bleed out and you're out until morning.
 10. Kills leave blood and bodies. Get the MOP from the back room and clean it up [E] — customers who see blood complain, and the manager fines you for every mess left in the morning.
 11. [Q] holsters / draws your weapon.
@@ -85,7 +85,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
  <div id="lobbyBox" style="display:none"><div class="small">ON SHIFT TONIGHT:</div><div id="players"></div>
   <button id="copyBtn">COPY INVITE LINK</button><button id="startBtn">START SHIFT</button><div id="waitTxt" class="small" style="display:none;margin-top:10px">Waiting for the host to start the shift…</div></div>
  <div id="status"></div>
- <div class="small" style="margin-top:16px">WASD move · SHIFT run · MOUSE look · CLICK attack · Q holster · E interact · 1 serve · 2 refuse · 3/4/5 ask · F flashlight · H rules<br>Everyone who opens this link lands in the same lobby. Headphones. Lights off.</div>
+ <div class="small" style="margin-top:16px">WASD move · SHIFT run · MOUSE look · CLICK attack · R reload · Q holster · E interact · 1 serve · 2 refuse · 3/4/5 ask · F flashlight · H rules<br>Everyone who opens this link lands in the same lobby. Headphones. Lights off.</div>
 </div></div>
 <div id="end" style="display:none"><div class="panel"><h2 id="endT"></h2><pre id="endS"></pre><button id="againBtn">BACK TO LOBBY</button><div id="endWait" class="small" style="display:none;margin-top:10px">Waiting for host…</div></div></div>
 
@@ -105,7 +105,11 @@ const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.leng
 const HOUR=80,BRK=[-4.7,-8.3],PALLET=[-1.3,-8.2],TERM=[5.1,-6.1],R=.3,WP=[[-1,16],[-1,5.8],[-1,4.2],[-1,2.15]];
 const PCOL=['#d8c060','#60a8d8','#d86060','#70d080','#c080d8','#d89a50','#60d8c8','#e0e0e0'];
 const W=[null,{n:'BASEBALL BAT',cd:.6,dmg:40,rng:2.2,cone:.7,gun:0},{n:'PISTOL',cd:.32,dmg:26,rng:28,cone:.05,gun:1,mag:12},{n:'SHOTGUN',cd:.95,dmg:80,rng:12,cone:.24,gun:1,mag:6}];
-const SHOP=[{n:'BASEBALL BAT',p:60},{n:'PISTOL + 12 rounds',p:140},{n:'SHOTGUN + 6 shells',p:280},{n:'AMMO (for your gun)',p:30},{n:'MEDKIT (self-revive)',p:90}];
+const PC={
+ wep:[{n:'BASEBALL BAT',p:60},{n:'PISTOL (+1 spare mag)',p:140},{n:'SHOTGUN (+1 spare load)',p:280},{n:'AMMO BOX (1 spare mag)',p:30},{n:'MEDKIT (self-revive)',p:90}],
+ dec:[{n:'BRIGHTER BULBS (light burns Hollows faster)',p:150,k:'bulbs'},{n:'POTTED PLANTS',p:40,k:'plants'},{n:'NEON OPEN SIGN',p:60,k:'neon'},{n:'NEW FLOOR TILES',p:120,k:'floor'},{n:'ARCADE CABINET',p:200,k:'arcade'},{n:'MOTION ALARM (warns when something comes back)',p:100,k:'alarm'}],
+ stk:[{n:'SNACK PACK (chips + candy)',p:40,s:[0,1]},{n:'GROCERY PACK (canned food, bread, toilet paper)',p:55,s:[2,4,5]},{n:'CAR CARE (motor oil)',p:25,s:[3]},{n:'COLD & HOT (drinks + hot dogs)',p:45,s:[6,7]},{n:'FULL RESTOCK (everything)',p:150,s:[0,1,2,3,4,5,6,7]}]};
+const DECOR_RATE={plants:.2,neon:.2,floor:.3,arcade:.3,bulbs:.1};
 const SEC=[
  {n:'CHIPS',x1:2,x2:3.8,z1:2.2,z2:2.7,k:'shelf',c:['#c22','#dc2','#25c','#2a4']},
  {n:'CANDY',x1:3.8,x2:5.6,z1:2.2,z2:2.7,k:'shelf',c:['#d4a','#a3d','#e83','#f4f4f4']},
@@ -238,7 +242,7 @@ const pallet=box(-2,-.6,0,.15,-8.8,-7.6,L(0x6a5030));
 for(let i=0;i<6;i++)box(-1.95+(i%2)*.7,-1.35+(i%2)*.7,.15+Math.floor(i/2)*.42,.55+Math.floor(i/2)*.42,-8.7+(i%3)*.02,-8.15+(i%3)*.02,crateM,false);
 for(let i=0;i<2;i++)box(-1.95+i*.7,-1.35+i*.7,.15,.55,-8.05,-7.65,crateM,false);
 box(4.4,5.9,0,.8,-6.7,-5.5,counterM);box(4.9,5.6,.8,1.3,-6.4,-6.0,darkM,false);
-box(4.95,5.55,.86,1.24,-6.42,-6.4,new THREE.MeshBasicMaterial({map:textTex(['SUPPLY','TERMINAL','> _'],'#03140a','#5f5',64,64,10)}),false);
+box(4.95,5.55,.86,1.24,-6.42,-6.4,new THREE.MeshBasicMaterial({map:textTex(['OFFICE','PC','> _'],'#03140a','#5f5',64,64,10)}),false);
 const backDoor=box(5.95,6.02,0,2.2,-8.4,-7.2,L(0x4a4e52),false);box(5.9,5.95,1,1.1,-7.4,-7.3,metalM,false);
 box(2,3.4,0,.9,-8.9,-8.3,crateM);box(-3.6,-3,0,.5,-6,-5.5,L(0x3a5a8a)); // misc
 // outside
@@ -400,8 +404,8 @@ function fire(e){onEvent(e);bcast({t:'e',e})}
 function act(a,v){if(isHost)hostAction('host',a,v);else if(conn&&conn.open)conn.send({t:'a',a,v})}
 
 /* ---------- host: setup ---------- */
-function freshState(){return {phase:'lobby',night:1,t:0,money:60,strikes:0,cust:null,next:6,lightsOut:false,brk:{who:null,p:0},evT:20,players:{},reason:'',hunters:[],ret:[],stock:[4,4,4,4,4,4,4,4],phone:null,queued:null,drainT:45,kills:0,served:0,mess:[],mt:0,report:''}}
-function newPlayer(name,i){const col=PCOL[i%PCOL.length];return {name,col,x:-1+rnd(-.8,.8),z:-1.4,ry:Math.PI,rx:0,fl:1,wep:0,ammo:0,med:0,hol:false,carry:null,down:false,bleed:0,dead:false,rev:null,revP:0,cl:null,clP:0,cd:0,
+function freshState(){return {phase:'lobby',night:1,t:0,money:60,strikes:0,cust:null,next:6,lightsOut:false,brk:{who:null,p:0},evT:20,players:{},reason:'',hunters:[],ret:[],stock:[4,4,4,4,4,4,4,4],phone:null,queued:null,drainT:45,kills:0,served:0,mess:[],mt:0,report:'',up:{},autoPow:0,reviews:[{s:4,t:'Open all night, decent coffee.',n:'Mark H.'},{s:3,t:'It\'s a gas station. It was fine.',n:'Ida B.'},{s:2,t:'Night clerk looked at my ID for like a full minute.',n:'Paul C.'}]}}
+function newPlayer(name,i){const col=PCOL[i%PCOL.length];return {name,col,x:-1+rnd(-.8,.8),z:-1.4,ry:Math.PI,rx:0,fl:1,wep:0,mag:0,res:0,rl:0,med:0,hol:false,carry:null,down:false,bleed:0,dead:false,rev:null,revP:0,cl:null,clP:0,cd:0,
  look:{h:+rnd(1.7,1.88).toFixed(2),skin:pick(SKIN),hairC:pick(HAIR)[0],bald:false,beard:Math.random()<.3,glasses:false,cast:false,eyepatch:false,jacket:col,shirt:'#d8d8d0',pants:'#22263a',shoes:'#141414',eyeC:'#3a2410',hat:true,hatC:'#1a1a1a'}}}
 function hostData(id,d){if(!S)return;
  if(d.t==='hi'){S.players[id]=newPlayer(String(d.name||'Clerk').slice(0,14),Object.keys(S.players).length)}
@@ -426,6 +430,9 @@ function makeCust(){const hollow=Math.random()<hollowChance(),a=makeLook(),idl=J
   else if(c.field==='hair'){if(a.bald||Math.random()<.2){idl.bald=!a.bald}else{const i=HAIR.findIndex(x=>x[0]===a.hairC);let j=i+(Math.random()<.5?-1:1);if(j<0||j>=HAIR.length)j=i?i-1:1;idl.hairC=HAIR[j][0];idl.hairN=HAIR[j][1]}}
   else{const k=pick(['cast','glasses','glasses','eyepatch','beard']);idl[k]=!a[k];if(k==='cast'&&!a.cast)idl.eyepatch=false}}
  return c}
+function rating(){const r=S.reviews;return r.length?r.reduce((a,b)=>a+b.s,0)/r.length:3}
+function decorBonus(){let b=0;for(const k in S.up)b+=DECOR_RATE[k]||0;return b}
+function review(st,txt,name){S.reviews.unshift({s:clamp(Math.round(st),1,5),t:txt,n:name});if(S.reviews.length>12)S.reviews.pop()}
 function idNote(l){const n=[];if(l.cast)n.push('Broken left leg (cast)');if(l.glasses)n.push('Wears glasses');if(l.eyepatch)n.push('Eyepatch, right eye');if(l.beard)n.push('Beard');return n.length?n.join(', '):'None'}
 function moveTo(c,x,z,sp,dt){const dx=x-c.x,dz=z-c.z,d=Math.hypot(dx,dz);if(d<.06){c.x=x;c.z=z;return true}const s=Math.min(d,sp*dt);c.x+=dx/d*s;c.z+=dz/d*s;return false}
 function say(who,txt,hollow){fire({type:'say',who,txt,h:hollow?1:0})}
@@ -436,9 +443,9 @@ function addHunter(c,x,z,st){const hp=100+Math.floor(S.t/HOUR)*20+(S.night-1)*15
 function addMess(x,z,body,a){S.mess.push({id:Math.floor(Math.random()*1e9),x,z,body:body?1:0,a:a||null,ry:rnd(0,6.28)})}
 function blackout(msg){if(!S.lightsOut){S.lightsOut=true;S.brk={who:null,p:0};fire({type:'blackout',msg:msg+' FIX THE BREAKER IN THE BACK ROOM.'})}else fire({type:'msg',msg})}
 function beginNight(){const s=S;Object.assign(s,{phase:'playing',t:0,strikes:0,cust:null,next:6,lightsOut:false,brk:{who:null,p:0},evT:22,hunters:[],ret:[],phone:null,queued:null,drainT:45,served:0,kills:0,reason:''});
- const pos={};let i=0;for(const id in s.players){const p=s.players[id];Object.assign(p,{down:false,dead:false,bleed:0,carry:null,rev:null,revP:0,cl:null,clP:0,x:-2.4+i*.7,z:-1.2});pos[id]=[p.x,p.z];i++}
+ const pos={};let i=0;for(const id in s.players){const p=s.players[id];Object.assign(p,{down:false,dead:false,bleed:0,carry:null,rev:null,revP:0,cl:null,clP:0,rl:0,x:-2.4+i*.7,z:-1.2});pos[id]=[p.x,p.z];i++}
  fire({type:'start',pos,night:s.night})}
-function startGame(){Object.assign(S,{night:1,money:60,stock:[4,4,4,4,4,4,4,4],mess:[]});for(const id in S.players)Object.assign(S.players[id],{wep:0,ammo:0,med:0,hol:false});beginNight()}
+function startGame(){Object.assign(S,{night:1,money:60,stock:[4,4,4,4,4,4,4,4],mess:[]});S.up={};S.reviews=freshState().reviews;for(const id in S.players)Object.assign(S.players[id],{wep:0,mag:0,res:0,rl:0,med:0,hol:false});beginNight()}
 function endNight(){const s=S;s.phase='morning';s.mt=20;const L=['Customers served: '+s.served,'Hollows killed: '+s.kills];
  let sold=0;s.stock=s.stock.map(v=>{const d=Math.floor(Math.random()*3);sold+=Math.min(v,d);return Math.max(0,v-d)});const day=sold*12;s.money+=day;L.push('Day shift sales: +$'+day+' (the shelves got emptier — restock tonight)');
  if(s.mess.length){const f=s.mess.length*40;s.money=Math.max(0,s.money-f);L.push('Manager found '+s.mess.length+' mess'+(s.mess.length>1?'es':'')+' you didn\'t clean: -$'+f);s.mess=[]}
@@ -471,11 +478,15 @@ function hostAction(id,a,v){const s=S;if(!s)return;const p=s.players[id];if(!p)r
  const c=s.cust,atCounter=c&&c.st==='wait'&&Math.hypot(p.x+1,p.z)<2.4&&p.z<.8;
  if((a==='serve'||a==='refuse')&&atCounter){
   if(a==='serve'){s.served++;
-   if(c.hollow){s.ret.push({c,t:rnd(25,50)});c.st='leave';c.wp=WP.length-2;if(s.stock[c.want]>0)s.stock[c.want]--;const m=12+Math.floor(Math.random()*25);s.money+=m;fire({type:'cash',msg:'+$'+m})}
-   else if(s.stock[c.want]<=0){c.st='leave';c.wp=WP.length-2;fire({type:'buzz',msg:'OUT OF '+SEC[c.want].n+'. NO SALE.'})}
-   else{s.stock[c.want]--;const m=15+Math.floor(Math.random()*30);s.money+=m;c.st='leave';c.wp=WP.length-2;fire({type:'cash',msg:'+$'+m})}}
+   const nm=c.first+' '+c.last[0]+'.',mult=.75+rating()*.08;
+   if(c.hollow){s.ret.push({c,t:rnd(25,50)});c.st='leave';c.wp=WP.length-2;if(s.stock[c.want]>0)s.stock[c.want]--;const m=Math.round((12+Math.random()*25)*mult);s.money+=m;fire({type:'cash',msg:'+$'+m});
+    if(Math.random()<.5)review(5,pick(['The clerk smelled warm. I will come back tonight.','Lovely people work here. I counted them.','Very good store. Very good people inside it.','I liked the clerk. I want to see the clerk again.']),nm)}
+   else if(s.stock[c.want]<=0){c.st='leave';c.wp=WP.length-2;review(1,'Didn\'t even have '+SEC[c.want].n.toLowerCase()+'. What is this place?',nm);fire({type:'buzz',msg:'OUT OF '+SEC[c.want].n+'. NO SALE.'})}
+   else{s.stock[c.want]--;const m=Math.round((15+Math.random()*30)*mult);s.money+=m;c.st='leave';c.wp=WP.length-2;fire({type:'cash',msg:'+$'+m});
+    const empty=s.stock.filter(x=>x===0).length,st=3+decorBonus()+(c.wait<15?.8:-.4)-(empty>2?1:0)+rnd(-.8,.8);
+    review(st,st>=4.5?pick(['Clean store, friendly clerk. Rare at 2 AM.','Fast service. Weirdly nice night clerk.','Best gas station in the county, honestly.']):st>=3.5?pick(['Good stop. Shelves were full.','Quick in and out.','Nice little place.']):st>=2.5?pick(['It\'s a gas station. It was fine.','Clerk stared at my ID forever.','Ok. Kind of creepy at night.']):pick(['Half the shelves were empty.','Took ages to get served.','Dirty and slow.']),nm)}}
   else{if(c.hollow){s.money+=40;c.st='flee';c.wp=WP.length-2;fire({type:'refuse_h',msg:'IT STARES AT YOU. THEN IT BACKS OUT THE DOOR.'})}
-   else{s.strikes++;c.st='leave';c.wp=WP.length-2;say('CUSTOMER',pick(['Are you serious? I want your manager.','Unbelievable. I\'m reporting this.','What did I do?!']),0);fire({type:'buzz',msg:'THAT WAS A REAL PERSON. COMPLAINT '+s.strikes+'/3'});if(s.strikes>=3)lose('FIRED. TOO MANY COMPLAINTS.')}}
+   else{s.strikes++;c.st='leave';c.wp=WP.length-2;review(1,pick(['Refused to serve me for NO reason. Avoid.','Clerk called me a "hollow"?? Psycho.','Got kicked out for nothing. 1 star.']),c.first+' '+c.last[0]+'.');say('CUSTOMER',pick(['Are you serious? I want your manager.','Unbelievable. I\'m reporting this.','What did I do?!']),0);fire({type:'buzz',msg:'THAT WAS A REAL PERSON. COMPLAINT '+s.strikes+'/3'});if(s.strikes>=3)lose('FIRED. TOO MANY COMPLAINTS.')}}
   return}
  if(a==='ask'&&atCounter&&[3,4,5].includes(v)&&!c.asked[v]){c.asked[v]=1;c.wait=Math.max(0,c.wait-6);
   const q=v===3?'Where are you headed tonight?':v===4?q4Text(c.idl):"When's your birthday?";say(p.name,q,0);const ans=answer(c,v);setTimeout(()=>{if(S&&S.cust===c)say('CUSTOMER',ans,c.hollow)},1100);return}
@@ -489,23 +500,28 @@ function hostAction(id,a,v){const s=S;if(!s)return;const p=s.players[id];if(!p)r
  if(a==='clean'&&p.carry==='mop'){let m=null,bd=1.6;for(const x of s.mess){const d=Math.hypot(x.x-p.x,x.z-p.z);if(d<bd){bd=d;m=x}}if(m){p.cl=m.id;p.clP=0;fire({type:'brk'})}return}
  if(a==='box'&&!p.carry&&Math.hypot(p.x-PALLET[0],p.z-PALLET[1])<1.6){p.carry='box';fire({type:'boxup',id});return}
  if(a==='stock'&&p.carry==='box'){const i=nearSec(p.x,p.z,true,s.stock);if(i>=0){s.stock[i]=4;p.carry=null;fire({type:'restock',msg:SEC[i].n+' RESTOCKED'})}return}
- if(a==='buy'&&Math.hypot(p.x-TERM[0],p.z-TERM[1])<1.8){const it=SHOP[v];if(!it)return;if(s.money<it.p){fire({type:'msgto',id,msg:'NOT ENOUGH MONEY IN THE REGISTER'});return}
-  if(v<=2){p.wep=v+1;p.ammo=W[v+1].mag||0;p.hol=false}else if(v===3){if(!W[p.wep]||!W[p.wep].gun){fire({type:'msgto',id,msg:'YOU NEED A GUN FIRST'});return}p.ammo+=W[p.wep].mag}else{if(p.med>=2){fire({type:'msgto',id,msg:'YOU CAN CARRY 2 MEDKITS'});return}p.med++}
-  s.money-=it.p;fire({type:'buy',id,msg:p.name+' BOUGHT '+it.n});return}
- if(a==='atk'&&p.wep&&!p.hol&&!p.carry&&p.cd<=0){const w=W[p.wep];if(w.gun&&p.ammo<=0)return;p.cd=w.cd*.85;if(w.gun)p.ammo--;
+ if(a==='buy'&&Math.hypot(p.x-TERM[0],p.z-TERM[1])<1.8){const [tab,ix]=String(v).split(':'),it=PC[tab]&&PC[tab][+ix];if(!it)return;
+  if(tab==='dec'&&s.up[it.k]){fire({type:'msgto',id,msg:'ALREADY INSTALLED'});return}
+  if(s.money<it.p){fire({type:'msgto',id,msg:'NOT ENOUGH MONEY IN THE REGISTER'});return}
+  if(tab==='wep'){const n=+ix;if(n<=2){p.wep=n+1;p.mag=W[n+1].mag||0;p.res=W[n+1].mag||0;p.hol=false;p.rl=0}else if(n===3){if(!W[p.wep]||!W[p.wep].gun){fire({type:'msgto',id,msg:'YOU NEED A GUN FIRST'});return}p.res+=W[p.wep].mag}else{if(p.med>=2){fire({type:'msgto',id,msg:'YOU CAN CARRY 2 MEDKITS'});return}p.med++}}
+  else if(tab==='dec')s.up[it.k]=1;
+  else it.s.forEach(k=>s.stock[k]=4);
+  s.money-=it.p;fire({type:'buy',id,msg:tab==='stk'?'DELIVERY ARRIVED. SHELVES STOCKED.':tab==='dec'?it.n.split(' (')[0]+' INSTALLED':p.name+' BOUGHT '+it.n.split(' (')[0]});return}
+ if(a==='reload'){const w=W[p.wep];if(w&&w.gun&&!p.rl&&p.res>0&&p.mag<w.mag&&!p.hol){p.rl=p.wep===2?1.4:2.2;fire({type:'reload',id})}return}
+ if(a==='atk'&&p.wep&&!p.hol&&!p.carry&&!p.rl&&p.cd<=0){const w=W[p.wep];if(w.gun&&p.mag<=0)return;p.cd=w.cd*.85;if(w.gun)p.mag--;
   fire({type:'shot',id,w:p.wep,x:p.x,z:p.z});const fx=-Math.sin(p.ry),fz=-Math.cos(p.ry);
   let best=null,bd=1e9;for(const h of s.hunters){const dx=h.x-p.x,dz=h.z-p.z,d=Math.hypot(dx,dz);if(d>w.rng||d<.01)continue;const ang=Math.acos(clamp((dx*fx+dz*fz)/d,-1,1));if(ang<w.cone+Math.atan(.4/d)&&d<bd){bd=d;best=h}}
   if(best){const dmg=w.dmg*(p.wep===3?clamp(1.4-bd/12,.4,1.2):1);best.hp-=dmg;const kb=p.wep===2?.25:.7;best.x+=fx*kb;best.z+=fz*kb;best.delay=Math.max(best.delay,p.wep===1?.5:.25);fire({type:'hit',x:best.x,z:best.z});
    if(best.hp<=0)killHunter(best,'IT\'S DOWN. +$60. NOW CLEAN UP THE MESS.',60)}}}
-function killHunter(h,msg,bonus){const s=S;s.hunters=s.hunters.filter(x=>x!==h);s.kills++;s.money+=bonus;addMess(h.x,h.z,1,h.a);fire({type:'hkill',x:h.x,z:h.z,msg});if(!s.hunters.length&&s.lightsOut)setTimeout(()=>{if(S&&S.lightsOut&&!S.hunters.length)fire({type:'msg',msg:'NOTHING ELSE IN HERE… FIX THE LIGHTS.'})},3500)}
+function killHunter(h,msg,bonus){const s=S;s.hunters=s.hunters.filter(x=>x!==h);s.kills++;s.money+=bonus;addMess(h.x,h.z,1,h.a);fire({type:'hkill',x:h.x,z:h.z,msg});if(!s.hunters.length&&s.lightsOut)s.autoPow=1.8}
 
 /* ---------- host: tick ---------- */
 function custTick(c,dt){
  if(c.st==='enter'){c.ry=Math.PI;const w=WP[c.wp];if(moveTo(c,w[0],w[1],c.a.cast?.9:1.3,dt)){if(c.wp===1)fire({type:'chime'});c.wp++;if(c.wp>=WP.length){c.st='wait';c.wait=0;
    const dirty=S.mess.some(inStore);
-   if(dirty&&!c.hollow){S.strikes++;c.st='leave';c.wp=WP.length-2;say('CUSTOMER',pick(['Is that… blood?! I\'m out of here.','Oh my god. What is THAT on the floor?','Nope. Nope. Calling someone about this.']),0);fire({type:'buzz',msg:'THEY SAW THE MESS. COMPLAINT '+S.strikes+'/3'});if(S.strikes>=3)lose('FIRED. THE STORE LOOKED LIKE A CRIME SCENE.');return}
+   if(dirty&&!c.hollow){review(1,'THERE WAS BLOOD ON THE FLOOR. Calling the health department.',c.first+' '+c.last[0]+'.');S.strikes++;c.st='leave';c.wp=WP.length-2;say('CUSTOMER',pick(['Is that… blood?! I\'m out of here.','Oh my god. What is THAT on the floor?','Nope. Nope. Calling someone about this.']),0);fire({type:'buzz',msg:'THEY SAW THE MESS. COMPLAINT '+S.strikes+'/3'});if(S.strikes>=3)lose('FIRED. THE STORE LOOKED LIKE A CRIME SCENE.');return}
    const it=SEC[c.want].n.toLowerCase();say('CUSTOMER',c.hollow&&Math.random()<.18?pick(['Good evening. '+it+', please.','Pump '+c.pump+'. And '+it+'. Thank you, clerk.']):pick(['Hey. Pump '+c.pump+' and some '+it+'.','Evening. Just '+it+', and pump '+c.pump+'.','Can I get '+it+'? Pump '+c.pump+'.','Pump '+c.pump+'. Oh, and '+it+'.']),c.hollow)}}}
- else if(c.st==='wait'){c.wait+=dt;if(c.hollow&&c.wait>42){S.cust=null;S.next=12;addHunter(c,c.x,c.z,'hunt');blackout('IT GOT TIRED OF WAITING.')}
+ else if(c.st==='wait'){c.wait+=dt;if(c.hollow&&c.wait>50&&!c.said){c.said=1;say('CUSTOMER',pick(['I can wait.','I am very patient.','Take your time. I have all night.']),1)}
   else if(!c.hollow&&c.wait>55){c.st='leave';c.wp=WP.length-2;say('CUSTOMER','Forget it. Nobody works here?',0)}}
  else if(c.st==='leave'||c.st==='flee'){if(c.st==='leave')c.ry=0;const w=WP[c.wp];if(moveTo(c,w[0],w[1],c.st==='flee'?2.4:(c.a.cast?.9:1.3),dt)){c.wp--;if(c.wp<0){S.cust=null;S.next=6+Math.random()*7}}}}
 function hostTick(dt){const s=S;
@@ -513,6 +529,7 @@ function hostTick(dt){const s=S;
  if(s.phase!=='playing')return;
  s.t+=dt;if(s.t>=6*HOUR){endNight();return}
  for(const id in s.players){const p=s.players[id];if(p.cd>0)p.cd-=dt;
+  if(p.rl>0){p.rl-=dt;if(p.rl<=0||p.down){if(!p.down){const w=W[p.wep];if(w&&w.gun){const take=Math.min(w.mag-p.mag,p.res);p.mag+=take;p.res-=take}}p.rl=0}}
   if(p.down&&!p.dead){p.bleed-=dt;if(p.bleed<=0){p.dead=true;p.down=false;fire({type:'dead',id,name:p.name})}}
   if(p.rev){const t=s.players[p.rev];if(!t||!t.down||p.down||p.dead||Math.hypot(t.x-p.x,t.z-p.z)>2){p.rev=null;p.revP=0}else{p.revP+=dt;if(p.revP>=3){t.down=false;t.bleed=0;fire({type:'revived',id:p.rev,name:t.name});p.rev=null;p.revP=0}}}
   if(p.cl){const m=s.mess.find(x=>x.id===p.cl);if(!m||p.carry!=='mop'||p.down||Math.hypot(m.x-p.x,m.z-p.z)>1.9){p.cl=null;p.clP=0}else{p.clP+=dt;if(p.clP>=(m.body?4:2.5)){s.mess=s.mess.filter(x=>x!==m);p.cl=null;p.clP=0;fire({type:'cleaned',msg:m.body?'BODY BAGGED. FLOOR CLEAN.':'CLEANED UP.'})}}}}
@@ -522,13 +539,14 @@ function hostTick(dt){const s=S;
  const sp=2.2+s.t/HOUR*.2+(s.night-1)*.08;
  for(const h of s.hunters.slice()){
   if(h.st==='approach'){h.ry=Math.atan2(-1-h.x,6.2-h.z);if(moveTo(h,-1,6.2,1.3,dt)){h.st='hunt';h.delay=.8;fire({type:'chime'});blackout('SOMETHING CAME BACK.')}continue}
-  if(!s.lightsOut){h.hp-=12*dt;if(h.hp<=0){killHunter(h,'THE LIGHT BURNED IT. IT LEFT A MESS.',0);continue}}
+  if(!s.lightsOut){h.hp-=(s.up.bulbs?20:12)*dt;if(h.hp<=0){killHunter(h,'THE LIGHT BURNED IT. IT LEFT A MESS.',0);continue}}
   if(h.delay>0){h.delay-=dt;continue}
   let best=null,bid=null,bd=1e9;for(const id in s.players){const p=s.players[id];if(p.down||p.dead)continue;const d=Math.hypot(p.x-h.x,p.z-h.z);if(d<bd){bd=d;best=p;bid=id}}
   if(!best)continue;h.ry=Math.atan2(best.x-h.x,best.z-h.z);moveTo(h,best.x,best.z,sp,dt);
   if(bd<.8){best.down=true;best.bleed=45;best.carry=null;best.rev=null;best.cl=null;h.delay=1.6;addMess(best.x,best.z,0);fire({type:'down',id:bid,name:best.name})}}
  if(!standing().length){lose(Object.values(s.players).some(p=>p.down)?'EVERYONE WENT DOWN. NOBODY LEFT TO HELP.':'NOBODY MADE IT TO 6 AM.');return}
  if(s.lightsOut&&s.brk.who){const p=s.players[s.brk.who];if(!p||p.down||p.dead||Math.hypot(p.x-BRK[0],p.z-BRK[1])>1.9){s.brk={who:null,p:0}}else{s.brk.p+=dt;if(s.brk.p>=4){s.lightsOut=false;s.brk={who:null,p:0};fire({type:'power',msg:s.hunters.length?'POWER IS BACK. THE LIGHT IS BURNING IT.':'POWER IS BACK.'})}}}
+ if(s.autoPow>0){s.autoPow-=dt;if(s.autoPow<=0&&s.lightsOut&&!s.hunters.length){s.lightsOut=false;s.brk={who:null,p:0};fire({type:'power',msg:'IT\'S DEAD. THE POWER FLICKERS BACK ON.'})}}
  s.drainT-=dt;if(s.drainT<=0){s.drainT=rnd(35,55);const i=Math.floor(Math.random()*8);if(s.stock[i]>0)s.stock[i]--}
  if(s.phone){s.phone.t-=dt;if(s.phone.t<=0)s.phone=null}
  s.evT-=dt;if(s.evT<=0){s.evT=14+Math.random()*20;const k=pick(['flicker','knock','bang','whisper','ring','flicker','radio','ring']);if(k==='ring'){if(!s.phone&&!s.queued)s.phone={t:12}}else fire({type:k})}}
@@ -549,7 +567,8 @@ function onEvent(e){if(e.msg&&e.type!=='msgto')showMsg(e.msg,3.4);
   case 'phone':showSub(e.who,e.txt);SFX.whisper();staticT=1.5;break;
   case 'blackout':SFX.thunk();setTimeout(SFX.sting,1200);break;
   case 'power':SFX.thunk();if(S&&S.hunters&&S.hunters.length)SFX.screech();break;
-  case 'stalk':staticT=4;SFX.low();break;
+  case 'stalk':staticT=4;SFX.low();if(S&&S.up&&S.up.alarm){for(let i=0;i<6;i++)tn(1800,1800,.12,.08,'square',i*.25);showMsg('MOTION ALARM: SOMETHING IS IN THE PARKING LOT',3.5)}break;
+  case 'reload':if(e.id===myId){tn(900,700,.08,.15,'square');tn(500,300,.1,.2,'square',.6);tn(1200,900,.06,.15,'square',1.1)}break;
   case 'down':SFX.scream(.7);flashV=e.id===myId?.9:.4;showMsg(e.id===myId?'YOU\'RE DOWN. WAIT FOR HELP.':e.name+' IS DOWN! REVIVE THEM [E]',4);break;
   case 'dead':flashV=.5;showMsg(e.id===myId?'YOU BLED OUT.':e.name+' BLED OUT.',4);SFX.low();break;
   case 'revived':showMsg(e.name+' IS BACK UP',2.5);SFX.cash();break;
@@ -573,7 +592,7 @@ function onEvent(e){if(e.msg&&e.type!=='msgto')showMsg(e.msg,3.4);
  }}
 
 /* ---------- local player ---------- */
-const me={x:-1,z:-1.4,vx:0,vz:0};let yaw=Math.PI,pitch=0,flOn=true,locked=false,bobT=0,lastStep=0,idOpen=false,idFor=-1,rulesOpen=false,shopOpen=false,localCd=0,ringT=0,moveAmt=0;const K={};
+const me={x:-1,z:-1.4,vx:0,vz:0};let yaw=Math.PI,pitch=0,flOn=true,locked=false,bobT=0,lastStep=0,idOpen=false,idFor=-1,rulesOpen=false,shopOpen=false,pcTab='main',localCd=0,ringT=0,moveAmt=0;const K={};
 function collide(p){for(const b of COL){const cx=clamp(p.x,b.x1,b.x2),cz=clamp(p.z,b.z1,b.z2);const dx=p.x-cx,dz=p.z-cz,d=Math.hypot(dx,dz);
  if(d<R){if(d>1e-4){p.x=cx+dx/d*R;p.z=cz+dz/d*R}else{const o=[[b.x1-R-p.x,0],[b.x2+R-p.x,0],[0,b.z1-R-p.z],[0,b.z2+R-p.z]].sort((a,c)=>Math.abs(a[0]+a[1])-Math.abs(c[0]+c[1]))[0];p.x+=o[0];p.z+=o[1]}}}}
 const nearCounter=()=>Math.hypot(me.x+1,me.z)<2.4&&me.z<.8;
@@ -603,7 +622,12 @@ function drawPhoto(c){const g=$('photo').getContext('2d'),l=c.idl,ph=c.anom==='p
 function openID(){const c=S.cust,l=c.idl;idOpen=true;idFor=c.id;$('idName').textContent=c.first+' '+(c.anom==='name'?c.first:c.last);$('idDob').textContent=pad(c.dob[0])+'.'+pad(c.dob[1])+'.'+c.dob[2];$('idExp').textContent=c.exp;
  $('idBody').textContent=l.h.toFixed(2)+' m · '+(l.bald?'Bald':l.hairN)+' · '+l.eyeN;$('idNote').textContent=idNote(l);$('q4').textContent=q4Text(l);drawPhoto(c);$('idcard').style.display='block';SFX.click()}
 function closeID(){idOpen=false;$('idcard').style.display='none'}
-function openShop(){shopOpen=true;$('shopList').innerHTML=SHOP.map((it,i)=>'<div>['+(i+1)+'] '+it.n+' ...... $'+it.p+'</div>').join('');$('shop').style.display='block';SFX.click()}
+function renderPC(){const t=pcTab;let h='',help='';
+ if(t==='main'){h='<div>[1] CUSTOMER REVIEWS ('+rating().toFixed(1)+' ★)</div><div>[2] WEAPONS & GEAR</div><div>[3] STORE UPGRADES</div><div>[4] RESTOCK DELIVERIES</div><div style="margin-top:8px;opacity:.7">REGISTER: $'+S.money+'</div>';help='[1-4] open · [E] log off'}
+ else if(t==='rev'){h='<div>AVERAGE: '+'★'.repeat(Math.round(rating()))+'☆'.repeat(5-Math.round(rating()))+' '+rating().toFixed(1)+' · better rating = bigger tips</div>'+S.reviews.slice(0,7).map(r=>'<div class="rv">'+'★'.repeat(r.s)+'☆'.repeat(5-r.s)+' — '+esc(r.t)+' <span style="opacity:.6">('+esc(r.n)+')</span></div>').join('');help='[0] back · [E] log off'}
+ else{const list=PC[t];h=list.map((it,i)=>'<div>['+(i+1)+'] '+it.n+' ...... '+(t==='dec'&&S.up[it.k]?'INSTALLED':'$'+it.p)+'</div>').join('')+'<div style="margin-top:8px;opacity:.7">REGISTER: $'+S.money+'</div>';help='[1-'+list.length+'] buy · [0] back · [E] log off'}
+ setH($('shopList'),h);$('pcHelp').textContent=help;$('pcTitle').textContent='> OFFICE PC'+({main:'',rev:' / REVIEWS',wep:' / WEAPONS',dec:' / UPGRADES',stk:' / DELIVERIES'})[t]}
+function openShop(){shopOpen=true;pcTab='main';renderPC();$('shop').style.display='block';SFX.click()}
 function closeShop(){shopOpen=false;$('shop').style.display='none'}
 function interact(){const p=S.players[myId];if(!p||p.dead)return;
  if(shopOpen){closeShop();return}
@@ -617,8 +641,8 @@ function interact(){const p=S.players[myId];if(!p||p.dead)return;
  if(nearMop()&&(!p.carry||p.carry==='mop')){act('mop');return}
  if(!p.carry&&nearPallet()){act('box');return}
  if(p.carry==='box'&&nearSec(me.x,me.z,true,S.stock)>=0){act('stock');return}}
-function attack(){const p=S.players[myId];if(!p||p.down||p.dead||p.carry||p.hol||!p.wep||localCd>0||shopOpen)return;const w=W[p.wep];
- if(w.gun&&p.ammo<=0){SFX.empty();localCd=.25;return}localCd=w.cd;vmKick=1;
+function attack(){const p=S.players[myId];if(!p||p.down||p.dead||p.carry||p.hol||!p.wep||p.rl>0||localCd>0||shopOpen)return;const w=W[p.wep];
+ if(w.gun&&p.mag<=0){SFX.empty();localCd=.25;if(p.res>0)act('reload');else showMsg('OUT OF AMMO — BUY MORE ON THE OFFICE PC',2);return}localCd=w.cd;vmKick=1;
  if(p.wep===1)SFX.swing();else{(p.wep===2?SFX.pistol:SFX.shotgun)(1);flashL.position.set(me.x-Math.sin(yaw)*.6,1.5,me.z-Math.cos(yaw)*.6);muzzleT=.06}
  act('atk')}
 addEventListener('keydown',e=>{K[e.code]=true;if(!joined||!S)return;
@@ -629,7 +653,10 @@ addEventListener('keydown',e=>{K[e.code]=true;if(!joined||!S)return;
  if(e.code==='KeyE')interact();
  if(e.code==='KeyQ')act('hol');
  const n=+e.code.replace('Digit','');
- if(shopOpen&&n>=1&&n<=5){act('buy',n-1);return}
+ if(shopOpen){if(e.code==='Digit0'||e.code==='Backspace'){pcTab='main';renderPC();SFX.click();return}
+  if(pcTab==='main'&&n>=1&&n<=4){pcTab=['rev','wep','dec','stk'][n-1];renderPC();SFX.click();return}
+  if(PC[pcTab]&&n>=1&&n<=PC[pcTab].length){act('buy',pcTab+':'+(n-1));return}return}
+ if(e.code==='KeyR')act('reload');
  if(p.down)return;
  if(S.cust&&S.cust.st==='wait'&&nearCounter()){if(n===1||n===2){act(n===1?'serve':'refuse');closeID()}else if(n>=3&&n<=5)act('ask',n)}});
 addEventListener('keyup',e=>{K[e.code]=false});
@@ -651,7 +678,7 @@ function updateHUD(){const s=S,play=s.phase==='playing',p=s.players[myId];
   setH($('money'),'NIGHT '+s.night+' · REGISTER: $'+s.money);setH($('strikes'),'COMPLAINTS: '+'● '.repeat(s.strikes)+'○ '.repeat(Math.max(0,3-s.strikes)));
   const low=SEC.filter((x,i)=>s.stock[i]===0).map(x=>x.n);const dirty=(s.mess||[]).filter(inStore).length;
   setH($('stockTxt'),(low.length?'<span style="color:#d84">EMPTY: '+low.join(', ')+'</span><br>':'')+(dirty?'<span style="color:#c44">MESSES ON THE FLOOR: '+dirty+'</span>':''));
-  if(p)setH($('wep'),(p.carry==='box'?'CARRYING BOX<br>':p.carry==='mop'?'CARRYING MOP<br>':'')+(p.wep?W[p.wep].n+(W[p.wep].gun?' · '+p.ammo:'')+(p.hol?' <span style="opacity:.6">(HOLSTERED · Q)</span>':' <span style="opacity:.6">(Q to holster)</span>'):'NO WEAPON')+(p.med?'<br>MEDKITS: '+p.med:''))}
+  if(p)setH($('wep'),(p.carry==='box'?'CARRYING BOX<br>':p.carry==='mop'?'CARRYING MOP<br>':'')+(p.wep?W[p.wep].n+(W[p.wep].gun?' · '+(p.rl>0?'RELOADING…':p.mag+' / '+p.res):'')+(p.hol?' <span style="opacity:.6">(HOLSTERED · Q)</span>':' <span style="opacity:.6">(Q to holster)</span>'):'NO WEAPON')+(p.med?'<br>MEDKITS: '+p.med:''))}
  setH($('plist'),Object.values(s.players).map(q=>'<div style="color:'+q.col+(q.dead?';text-decoration:line-through;opacity:.5':'')+'">'+esc(q.name)+(q.down?' <span style="color:#c33">DOWN '+Math.ceil(q.bleed)+'s</span>':'')+'</div>').join(''));
  let pr='';
  if(play&&p&&!p.dead&&!p.down&&!shopOpen){const dn=nearDowned();
@@ -660,7 +687,7 @@ function updateHUD(){const s=S,play=s.phase==='playing',p=s.players[myId];
   else if(s.phone&&nearCounter())pr='[E] ANSWER THE PHONE';
   else if(s.cust&&s.cust.st==='wait'&&nearCounter())pr=idOpen?'':'[E] CHECK ID &nbsp; [3][4][5] ASK &nbsp; [1] SERVE &nbsp; [2] REFUSE';
   else if(p.carry==='mop'&&nearMess())pr=p.cl?'CLEANING… STAY CLOSE':'[E] CLEAN UP';
-  else if(nearTerm()&&!p.carry)pr='[E] SUPPLY TERMINAL';
+  else if(nearTerm()&&!p.carry)pr='[E] OFFICE PC';
   else if(nearMop()&&(!p.carry||p.carry==='mop'))pr=p.carry==='mop'?'[E] PUT MOP BACK':'[E] TAKE MOP';
   else if(!p.carry&&nearPallet())pr='[E] PICK UP STOCK BOX';
   else if(p.carry==='box'){const i=nearSec(me.x,me.z,true,s.stock);pr=i>=0?'[E] RESTOCK '+SEC[i].n:'FIND A SHELF THAT ISN\'T FULL'}
@@ -668,7 +695,7 @@ function updateHUD(){const s=S,play=s.phase==='playing',p=s.players[myId];
   else if(s.lightsOut)pr='<span style="color:#c33">FIND THE BREAKER — BACK ROOM</span>'}
  setH($('prompt'),pr);
  if(idOpen&&(!s.cust||s.cust.id!==idFor||s.cust.st!=='wait'||!nearCounter()||!play))closeID();
- if(shopOpen&&(!nearTerm()||!play||(p&&p.down)))closeShop();
+ if(shopOpen&&(!nearTerm()||!play||(p&&p.down)))closeShop();else if(shopOpen&&frame%15===0)renderPC();
  let bp=-1;if(play&&p){if(s.lightsOut&&s.brk.who===myId)bp=s.brk.p/4;else if(p.rev)bp=p.revP/3;else if(p.cl){const m=s.mess.find(x=>x.id===p.cl);if(m)bp=p.clP/(m.body?4:2.5)}}
  $('bar').style.display=bp>=0?'block':'none';if(bp>=0)$('bar').firstChild.style.width=(bp*100)+'%';
  const dt=play&&p&&(p.down||p.dead);$('down').style.display=dt?'block':'none';if(dt)setH($('down'),p.dead?'DEAD — SPECTATING UNTIL MORNING':'DOWN — BLEEDING OUT '+Math.ceil(p.bleed)+'s · CRAWL TO A TEAMMATE'+(p.med?' · [E] USE MEDKIT':''));
@@ -681,6 +708,14 @@ function updateHUD(){const s=S,play=s.phase==='playing',p=s.players[myId];
   $('againBtn').style.display=isHost?'block':'none';$('endWait').style.display=isHost?'none':'block'}
  if(!play&&locked)document.exitPointerLock()}
 
+/* ---------- store upgrades (visual) ---------- */
+const applied={};const neonL=new THREE.PointLight(0xff3050,0,6,1.5);neonL.position.set(2.5,2,5.6);scene.add(neonL);
+function applyUp(k){applied[k]=1;
+ if(k==='plants'){[[-5.6,4.5],[5.65,4.55],[1.6,4.6],[-5.6,-4.6]].forEach(([x,z])=>{box(x-.18,x+.18,0,.4,z-.18,z+.18,L(0x8a4a2a),false);for(let i=0;i<5;i++){const c=new THREE.Mesh(new THREE.ConeGeometry(rnd(.12,.2),rnd(.5,.9),5),L(pick([0x2a6a2a,0x3a7a30,0x225a22])));c.position.set(x+rnd(-.12,.12),.7,z+rnd(-.12,.12));c.rotation.set(rnd(-.4,.4),0,rnd(-.4,.4));scene.add(c)}})}
+ if(k==='neon'){const n=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.5),new THREE.MeshBasicMaterial({map:textTex(['OPEN'],'#000','#ff3a5a',128,48,34),transparent:true,opacity:.95}));n.position.set(2.5,1.9,4.93);n.rotation.y=Math.PI;scene.add(n);const n2=n.clone();n2.rotation.y=0;n2.position.z=4.96;scene.add(n2);neonL.intensity=.8}
+ if(k==='floor'){floorM.map=tex(64,64,(g,w,h)=>{for(let y=0;y<4;y++)for(let x=0;x<4;x++){g.fillStyle=(x+y)%2?'#d8d4c8':'#2a2a30';g.fillRect(x*16,y*16,16,16)}grime(g,w,h,80,.12)},[12,14]);floorM.needsUpdate=true}
+ if(k==='arcade'){box(-6,-5.35,0,1.75,.3,1.1,L(0x2a1a4a));box(-5.36,-5.33,1.0,1.5,.4,1.0,new THREE.MeshBasicMaterial({map:textTex(['DEEP','BLAST','INSERT','COIN'],'#05051a','#6cf',64,64,11)}),false);box(-5.6,-5.2,.85,.95,.4,1.0,L(0x111111),false)}}
+
 /* ---------- world update ---------- */
 const others={},hunterObjs={},messObjs={};let custObj=null,frame=0;
 const poolM=new THREE.MeshLambertMaterial({color:0x4a0606}),poolM2=new THREE.MeshLambertMaterial({color:0x2a0303});
@@ -690,7 +725,8 @@ function buildMess(m){const g=new THREE.Group();const pool=new THREE.Mesh(new TH
  g.position.set(m.x,0,m.z);scene.add(g);return g}
 function updateWorld(dt,now){const s=S,play=s.phase==='playing';
  let base=s.lightsOut?0:1;if(flickerT>0){flickerT-=dt;base*=Math.random()<.5?.08:1}else if(!s.lightsOut&&Math.random()<.004)base*=.3;
- storeL1.intensity=1.1*base;storeL2.intensity=base;backL.intensity=.7*base;fridgeL.intensity=.35*base;lampM.color.setScalar(base>.5?.92:.06);
+ if(s.up)for(const k in s.up)if(!applied[k])applyUp(k);const bm=s.up&&s.up.bulbs?1.4:1;
+ storeL1.intensity=1.1*base*bm;storeL2.intensity=base*bm;backL.intensity=.7*base*bm;neonL.intensity=applied.neon?(s.lightsOut?.2:.8):0;fridgeL.intensity=.35*base;lampM.color.setScalar(base>.5?.92:.06);
  amb.intensity=s.lightsOut?.05:.3*Math.max(base,.3);redL.intensity=s.lightsOut?.55+Math.sin(now/300)*.3:0;
  brkLampM.color.set(s.lightsOut?0xff2010:0x20ff40);
  const stalking=s.hunters&&s.hunters.some(h=>h.st==='approach');
@@ -755,7 +791,7 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/
    camera.rotation.set(pitch,yaw,(hd<4?rnd(-.02,.02):0)+(p.down?.25:0)+Math.sin(bobT)*.01*bob);
    swayX*=Math.pow(.002,dt);swayY*=Math.pow(.002,dt);
    vm.visible=!p.down&&!p.dead&&!!((p.wep&&!p.hol)||p.carry);setVM(p.hol?0:p.wep,p.carry);vmKick=Math.max(0,vmKick-dt*6);
-   vm.position.set(.26+Math.sin(bobT)*.014*bob-swayX,-.24-Math.abs(Math.sin(bobT))*.018*bob+Math.sin(t*1.3)*.004+swayY,-.42+vmKick*.08);vm.rotation.set(vmKick*(p.wep===1?-1.2:.25)+swayY*2,swayX*2,0)}
+   vm.position.set(.26+Math.sin(bobT)*.014*bob-swayX,-.24-Math.abs(Math.sin(bobT))*.018*bob+Math.sin(t*1.3)*.004+swayY,-.42+vmKick*.08);vm.rotation.set(vmKick*(p.wep===1?-1.2:.25)+swayY*2+(p.rl>0?-.7:0),swayX*2,p.rl>0?.4:0)}
   else{vm.visible=false;const t=now/1000;camera.position.set(Math.sin(t*.05)*14,3,18+Math.cos(t*.05)*6);camera.lookAt(0,1.5,3)}}
  else{vm.visible=false;const t=now/1000;camera.position.set(Math.sin(t*.05)*14,3,18+Math.cos(t*.05)*6);camera.lookAt(0,1.5,3);rainTick(dt)}
  if(frame%3===0){const fv=fl.intensity;fl.intensity=0;cctvScr.visible=false;renderer.setRenderTarget(cctvRT);renderer.render(scene,cctvCam);renderer.setRenderTarget(null);cctvScr.visible=true;fl.intensity=fv}
