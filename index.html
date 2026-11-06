@@ -103,7 +103,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 12. Keep the shelves stocked. Grab boxes from the pallet in the back room. No stock = no sale. The day shift sells stuff too.
 13. Survive until 6:00 AM. Then do it again tomorrow night. Money, weapons and stock carry over.</pre><div class="small" style="margin-top:12px">[H] close</div></div></div>
 <div id="menu"><div class="panel">
- <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR · <span style="color:#666">v8</span></div>
+ <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR · <span style="color:#666">v9</span></div>
  <div id="joinBox"><input id="nm" maxlength="14" placeholder="your name"><button id="joinBtn">CLOCK IN</button><button id="privBtn">CREATE PRIVATE ROOM</button><div class="small" id="roomTxt" style="margin-top:8px"></div></div>
  <div id="lobbyBox" style="display:none"><div class="small">ON SHIFT TONIGHT:</div><div id="players"></div>
   <button id="copyBtn">COPY INVITE LINK</button><button id="startBtn">START SHIFT</button><div id="waitTxt" class="small" style="display:none;margin-top:10px">Waiting for the host to start the shift…</div></div>
@@ -480,10 +480,10 @@ function toHost(m){m.f=myId;send('c',m)}
 function fire(e){onEvent(e);bcast({t:'e',e})}
 function act(a,v){if(isHost)hostAction('host',a,v);else toHost({t:'a',a,v})}
 function onMq(topic,payload,retain){let d;try{d=JSON.parse(payload)}catch(e){return}const k=topic.slice(TOP.length);
- if(k==='b'){if(retain||d.id===myId)return;
+ if(k==='b'){if(retain||d.id===myId||ignoreHost.has(d.id))return;
   if(isHost&&joined){if(d.id<myId){stepDown()}return}
   lastBeacon=performance.now();hostSeen=d.id;return}
- if(k==='h'){if(isHost||d.hid!==hostSeen)return;if(d.t==='s')S=d.s;else if(d.t==='e')onEvent(d.e);return}
+ if(k==='h'){if(isHost||d.hid!==hostSeen)return;if(d.t==='s'){const n=d.s;if(S){if(!n.reviews)n.reviews=S.reviews;if(n.report===undefined)n.report=S.report;for(const id in n.players){const o=S.players[id];if(!n.players[id].look&&o)n.players[id].look=o.look}}if(n.reviews&&n.players&&Object.values(n.players).every(q=>q.look)){if(!S)status('');S=n;gotState=performance.now()}}else if(d.t==='e')onEvent(d.e);return}
  if(k==='c'&&isHost&&d.f){seenAt[d.f]=performance.now();hostData(d.f,d)}}
 async function connectRelay(){if(mq&&mq.open)return true;
  for(const url of BROKERS){status('Connecting to game server…');const ok=await new Promise(res=>{let done=false;const fin=v=>{if(!done){done=true;res(v)}};
@@ -497,9 +497,13 @@ async function join(){myId=myId||('p'+Math.random().toString(36).slice(2,10));
  if(lastBeacon&&performance.now()-lastBeacon<3000)startClient();else startHost()}
 function startHost(){isHost=true;joined=true;S=freshState();S.players.host=newPlayer(myName,0);status('');
  clearInterval(beaconTimer);beaconTimer=setInterval(()=>{send('b',{id:myId});const now=performance.now();for(const id in S.players){if(id!=='host'&&seenAt[id]&&now-seenAt[id]>9000){delete S.players[id];delete seenAt[id]}}},1000);send('b',{id:myId})}
-function startClient(){isHost=false;joined=true;status('');clearInterval(beaconTimer);
+let gotState=0,fullT=0,joinT=0;const ignoreHost=new Set();
+function sendState(){fullT++;const full=fullT%8===0;const rd=(k,v)=>typeof v==='number'&&!Number.isInteger(v)?Math.round(v*100)/100:v;
+ const o=Object.assign({},S);if(!full){delete o.reviews;delete o.report;o.players={};for(const id in S.players){const q=Object.assign({},S.players[id]);delete q.look;o.players[id]=q}}
+ mq&&mq.pub(TOP+'h',JSON.stringify({t:'s',s:o,hid:myId},rd))}
+function startClient(){isHost=false;joined=true;gotState=0;joinT=performance.now();status('Joining the lobby…');clearInterval(beaconTimer);
  clearInterval(hiTimer);const hi=()=>{if(!S||!S.players[myId])toHost({t:'hi',name:myName});else clearInterval(hiTimer)};hi();hiTimer=setInterval(hi,1500);
- clearInterval(watchTimer);watchTimer=setInterval(()=>{if(joined&&!isHost&&performance.now()-lastBeacon>6500)hostLost()},1000)}
+ clearInterval(watchTimer);watchTimer=setInterval(()=>{const now=performance.now();if(!joined||isHost)return;if(now-lastBeacon>6500){hostLost();return}if(!S&&now-joinT>9000){ignoreHost.add(hostSeen);clearInterval(watchTimer);clearInterval(hiTimer);status('');showMsg('COULD NOT JOIN THAT LOBBY — STARTED YOUR OWN',3.5);startHost()}else if(!S)status('Joining the lobby… '+Math.ceil((now-joinT)/1000)+'s')},1000)}
 function stepDown(){clearInterval(beaconTimer);isHost=false;joined=false;S=null;showMsg('TWO LOBBIES MERGED — REJOINING',2.5);setTimeout(join,500)}
 function hostLost(){if(!joined||isHost)return;joined=false;S=null;clearInterval(watchTimer);showMsg('HOST LEFT — A NEW HOST TAKES OVER',3);setTimeout(join,300+Math.random()*1200)}
 function relayLost(){joined=false;S=null;isHost=false;clearInterval(beaconTimer);clearInterval(watchTimer);mq=null;showMsg('LOST CONNECTION TO THE SERVER — RECONNECTING',3);$('menu').style.display='flex';setTimeout(join,1500)}
@@ -915,7 +919,7 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/
  if(localCd>0)localCd-=dt;
  if(joined&&S){const play=S.phase==='playing',p=S.players[myId];
   if(play)movePlayer(dt);
-  if(isHost){if(p){p.x=me.x;p.z=me.z;p.ry=yaw;p.rx=pitch;p.fl=flOn?1:0}hostTick(dt);netT+=dt;if(netT>.1){netT=0;bcast({t:'s',s:S})}}
+  if(isHost){if(p){p.x=me.x;p.z=me.z;p.ry=yaw;p.rx=pitch;p.fl=flOn?1:0}hostTick(dt);netT+=dt;if(netT>.12){netT=0;sendState()}}
   else{netT+=dt;if(netT>.1){netT=0;toHost({t:'p',x:+me.x.toFixed(2),z:+me.z.toFixed(2),ry:+yaw.toFixed(3),rx:+pitch.toFixed(3),fl:flOn?1:0})}}
   const hd=updateWorld(dt,now);updateHUD();
   if(play&&p){const t=now/1000,bob=p.down||p.dead?0:Math.min(1,moveAmt),ey=p.dead?1.7:p.down?.45:1.6;
