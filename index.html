@@ -119,11 +119,13 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 9. Get hit and you go down. A teammate can revive you [E]. Bleed out and you're out until morning.
 10. Kills leave blood and bodies. Get the MOP from the back room and clean it up [E] — customers who see blood complain, and the manager fines you for every mess left in the morning.
 11. [Q] holsters / draws your weapon. SHIFT sprints, but you run out of breath.
-12. You can LOCK THE FRONT DOOR [E] from inside. Things that come back will bang on it until it breaks. Customers can't get in either.
+12. Some customers want a COFFEE: brew one at the coffee machine (right wall) and have it in hand when you serve them for a tip.
+13. Empty the TRASH by the counter into the dumpster outside, left of the store. Overflowing trash = bad reviews.
+14. You can LOCK THE FRONT DOOR [E] from inside. Things that come back will bang on it until it breaks. Customers can't get in either.
 12. Keep the shelves stocked. Grab boxes from the pallet in the back room. No stock = no sale. The day shift sells stuff too.
 13. Survive until 6:00 AM. Then do it again tomorrow night. Money, weapons and stock carry over.</pre><div class="small" style="margin-top:12px">[H] close</div></div></div>
 <div id="menu"><div class="panel">
- <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR · <span style="color:#666">v15</span></div>
+ <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR · <span style="color:#666">v16</span></div>
  <div id="joinBox"><input id="nm" maxlength="14" placeholder="your name"><button id="joinBtn">CLOCK IN</button><button id="privBtn">CREATE PRIVATE ROOM</button><div class="small" id="roomTxt" style="margin-top:8px"></div></div>
  <div id="lobbyBox" style="display:none"><div class="small">ON SHIFT TONIGHT:</div><div id="players"></div>
   <button id="copyBtn">COPY INVITE LINK</button><button id="startBtn">START SHIFT</button><div id="waitTxt" class="small" style="display:none;margin-top:10px">Waiting for the host to start the shift…</div></div>
@@ -316,6 +318,7 @@ box(-3.15,-2.4,1.06,1.5,.75,1.15,darkM,false); // cctv monitor body
 box(-5.85,-5.2,0,1.7,3.6,4.4,metalM);box(-5.84,-5.82,1.0,1.4,3.75,4.25,B(0x1a3a6a),false); // ATM
 box(-5.9,-4.4,0,.85,1.6,2.9,L(0xdadad4));box(-5.85,-4.45,.85,.88,1.65,2.85,new THREE.MeshBasicMaterial({color:0x8ab0c8,transparent:true,opacity:.5}),false); // freezer
 box(3.2,5.4,0,.9,4.45,4.85,L(0x50402a));for(let i=0;i<8;i++)box(3.25+i*.27,3.48+i*.27,.9,1.25,4.6,4.7,L(pick([0xc03030,0x3050a0,0xd0c040,0x40a060,0xe0e0e0])),false); // magazines
+const COFFEE=[5.0,3.5],BIN=[-3.6,-.35],DUMP=[-9,6.5];
 box(5.3,6,0,1,3,4.6,counterM);box(5.4,5.8,1,1.55,3.3,3.7,darkM,false);box(5.45,5.75,1.0,1.08,3.75,4.05,L(0x904020),false); // coffee
 poster(['NIGHT STOP','ALWAYS OPEN'],'#1a3050','#f0d040',1.2,.8,-3,2.2,-4.88,0);
 poster(['NO','LOITERING'],'#eee','#a00',.6,.6,-5.98,2.1,-2,Math.PI/2);
@@ -344,8 +347,9 @@ box(-3.25,-2.75,1.1,1.35,12.3,12.32,B(0x30a050),false);box(2.75,3.25,1.1,1.35,12
 box(-60,60,-.01,0,22,30,L(0x111113),false);
 for(let x=-58;x<60;x+=4)box(x,x+2,0,.01,25.9,26.1,L(0x8a8a60),false);
 box(8,9,0,2.2,6,9,L(0x2a3a5a));box(8.1,8.9,.9,2,5.96,6,new THREE.MeshBasicMaterial({color:0x223322}),false); // ice box/vending outside
+const _m4=new THREE.Matrix4(),_q=new THREE.Quaternion(),_v=new THREE.Vector3(),_sc=new THREE.Vector3(),_c=new THREE.Color();
 const treeM=L(0x0b100c);
-for(let i=0;i<90;i++){let x,z;if(Math.random()<.5){x=rnd(-45,45);z=rnd(34,50)}else{x=(Math.random()<.5?-1:1)*rnd(16,40);z=rnd(-25,34)}const h=rnd(5,11);const t=new THREE.Mesh(new THREE.ConeGeometry(rnd(1.2,2.4),h,6),treeM);t.position.set(x,h/2,z);scene.add(t)}
+{const tg=new THREE.ConeGeometry(1,1,7),trees=new THREE.InstancedMesh(tg,treeM,140);for(let i=0;i<140;i++){let x,z;if(Math.random()<.5){x=rnd(-50,50);z=rnd(34,55)}else{x=(Math.random()<.5?-1:1)*rnd(16,45);z=rnd(-30,34)}const h=rnd(5,12),r=rnd(1.2,2.6);_m4.compose(_v.set(x,h/2,z),_q,_sc.set(r,h,r));trees.setMatrixAt(i,_m4)}scene.add(trees)}
 // parked car
 box(-11,-7,0,.9,9,11,L(0x3a2a2a));box(-10.2,-7.8,.9,1.5,9.2,10.8,L(0x2a2020));box(-10.1,-7.9,.95,1.45,9.18,9.2,new THREE.MeshBasicMaterial({color:0x111820}),false);
 
@@ -364,11 +368,15 @@ for(let z=-4.4;z<=-.6;z+=.95)box(-5.33,-5.28,0,2.3,z-.03,z+.03,darkM,false);
 const fglass=new THREE.Mesh(new THREE.PlaneGeometry(3.8,2.1),new THREE.MeshBasicMaterial({color:0x9ac8ff,transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false}));fglass.rotation.y=Math.PI/2;fglass.position.set(-5.3,1.1,-2.5);scene.add(fglass);
 // roller
 box(0,.7,1.06,1.12,.75,1.25,metalM,false);box(.02,.68,1.3,1.33,.78,1.22,new THREE.MeshBasicMaterial({color:0xffb070,transparent:true,opacity:.35}),false);
-SEC.forEach(s=>{s.lv=[];const mats=s.c.map(c=>s.k==='roller'?new THREE.MeshLambertMaterial({color:c,emissive:0x301008}):L(c));
- for(let l=0;l<4;l++){const g=new THREE.Group();scene.add(g);s.lv.push(g);
-  if(s.k==='shelf'){const y=[.1,.5,.9,1.3][l];for(let x=s.x1+.12;x<s.x2-.1;x+=.22){const h=rnd(.2,.32);const m=new THREE.Mesh(new THREE.BoxGeometry(.18,h,.42),pick(mats));m.position.set(x,y+h/2,(s.z1+s.z2)/2);g.add(m)}}
-  else if(s.k==='fridge'){const y=[.17,.62,1.07,1.52][l];for(let z=s.z1+.15;z<s.z2-.1;z+=.17){const h=rnd(.24,.34);const m=new THREE.Mesh(new THREE.BoxGeometry(.1,h,.1),pick(mats));m.position.set(-5.6,y+h/2,z);g.add(m);const m2=m.clone();m2.position.x=-5.78;g.add(m2)}}
-  else{for(let x=.1;x<.65;x+=.12){const m=new THREE.Mesh(new THREE.BoxGeometry(.1,.035,.035),pick(mats));m.position.set(x,1.15,.82+l*.12);g.add(m)}}}});
+const prodGeo=new THREE.BoxGeometry(1,1,1),prodM=new THREE.MeshLambertMaterial({color:0xffffff}),rollM=new THREE.MeshLambertMaterial({color:0xffffff,emissive:0x301008});
+SEC.forEach(s=>{s.lv=[];
+ for(let l=0;l<4;l++){const items=[];
+  if(s.k==='shelf'){const y=[.1,.5,.9,1.3][l];for(let x=s.x1+.12;x<s.x2-.1;x+=.22){const h=rnd(.2,.32);items.push([x,y+h/2,(s.z1+s.z2)/2,.18,h,.42])}}
+  else if(s.k==='fridge'){const y=[.17,.62,1.07,1.52][l];for(let z=s.z1+.15;z<s.z2-.1;z+=.17){const h=rnd(.24,.34);items.push([-5.6,y+h/2,z,.1,h,.1]);items.push([-5.78,y+h/2,z,.1,h,.1])}}
+  else{for(let x=.1;x<.65;x+=.12)items.push([x,1.15,.82+l*.12,.1,.035,.035])}
+  const im=new THREE.InstancedMesh(prodGeo,s.k==='roller'?rollM:prodM,items.length);
+  items.forEach((it,i)=>{_m4.compose(_v.set(it[0],it[1],it[2]),_q,_sc.set(it[3],it[4],it[5]));im.setMatrixAt(i,_m4);im.setColorAt(i,_c.set(pick(s.c)))});
+  im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;scene.add(im);s.lv.push(im)}});
 function secDist(s,x,z){const dx=Math.max(s.x1-x,0,x-s.x2),dz=Math.max(s.z1-z,0,z-s.z2);return Math.hypot(dx,dz)}
 function nearSec(x,z,needy,stock){let bi=-1,bd=1.2;SEC.forEach((s,i)=>{const d=secDist(s,x,z);if(d<bd&&(!needy||stock[i]<4)){bd=d;bi=i}});return bi}
 
@@ -382,8 +390,8 @@ const fridgeL=new THREE.PointLight(0x88aaff,.35,3.5,1.5);fridgeL.position.set(-5
 const flashL=new THREE.PointLight(0xffc070,0,8,1.5);scene.add(flashL);
 box(-2.6,-1.4,2.95,3,.6,.9,lampM,false);box(3.2,4.4,2.95,3,-.4,-.1,lampM,false);box(3.2,4.4,2.95,3,2.3,2.6,lampM,false);box(-.6,.6,2.95,3,-7.2,-6.9,lampM,false);
 const plPool=[],eyePool=[];
-for(let i=0;i<6;i++){const sl=new THREE.SpotLight(0xfff0d0,0,16,.42,.55,1.2);scene.add(sl);scene.add(sl.target);plPool.push(sl)}
-for(let i=0;i<3;i++){const e=new THREE.PointLight(0xff2010,0,4.5,1.5);scene.add(e);eyePool.push(e)}
+for(let i=0;i<3;i++){const sl=new THREE.SpotLight(0xfff0d0,0,16,.42,.55,1.2);scene.add(sl);scene.add(sl.target);plPool.push(sl)}
+for(let i=0;i<2;i++){const e=new THREE.PointLight(0xff2010,0,4.5,1.5);scene.add(e);eyePool.push(e)}
 const fl=new THREE.SpotLight(0xfff0d0,0,18,.42,.55,1.2);fl.position.set(.15,-.1,0);camera.add(fl);fl.target.position.set(0,0,-1);camera.add(fl.target);
 
 /* ---------- cctv ---------- */
@@ -551,6 +559,8 @@ const vm=new THREE.Group();camera.add(vm);vm.position.set(.26,-.24,-.42);let vmW
 const vmHand=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.14),L(0xd0a080));vmHand.position.set(0,-.02,.06);vm.add(vmHand);
 function setVM(w,carry){if(vmWep===w&&vmCarry===carry)return;vm.children.slice().forEach(c=>{if(c!==vmHand)vm.remove(c)});vmWep=w;vmCarry=carry;vmHand.visible=!!(w||carry);
  if(carry==='box'){const b=new THREE.Mesh(new THREE.BoxGeometry(.42,.3,.32),crateM);b.position.set(-.26,-.05,-.12);vm.add(b);return}
+ if(carry==='trash'){const b=new THREE.Mesh(new THREE.SphereGeometry(.2,8,6),L(0x111111));b.scale.set(1,1.2,1);b.position.set(-.2,-.08,-.1);vm.add(b);return}
+ if(carry==='coffee'){const c=new THREE.Mesh(new THREE.CylinderGeometry(.04,.032,.12,10),L(0xf0ead8));c.position.set(-.05,.02,-.05);vm.add(c);return}
  if(carry==='mop'){const m=mopMesh();m.rotation.x=-.55;m.position.set(-.05,0,-.05);vm.add(m);return}
  if(w>0){const m=wepMesh(w);if(w===1){m.rotation.x=.9;m.position.set(0,.05,0)}vm.add(m)}}
 
@@ -622,7 +632,7 @@ function hostLost(){if(!joined||isHost)return;joined=false;S=null;clearInterval(
 function relayLost(){joined=false;S=null;isHost=false;clearInterval(beaconTimer);clearInterval(watchTimer);mq=null;showMsg('LOST CONNECTION TO THE SERVER — RECONNECTING',3);$('menu').style.display='flex';setTimeout(join,1500)}
 
 /* ---------- host: setup ---------- */
-function freshState(){return {door:'open',doorHp:7,phase:'lobby',night:1,t:0,money:60,strikes:0,cust:null,next:6,lightsOut:false,brk:{who:null,p:0},evT:20,players:{},reason:'',hunters:[],ret:[],stock:[4,4,4,4,4,4,4,4],phone:null,queued:null,drainT:45,kills:0,served:0,drops:[],mess:[],mt:0,report:'',up:{},autoPow:0,reviews:[{s:4,t:'Open all night, decent coffee.',n:'Mark H.'},{s:3,t:'It\'s a gas station. It was fine.',n:'Ida B.'},{s:2,t:'Night clerk looked at my ID for like a full minute.',n:'Paul C.'}]}}
+function freshState(){return {door:'open',doorHp:7,phase:'lobby',night:1,t:0,money:60,strikes:0,cust:null,next:6,lightsOut:false,brk:{who:null,p:0},evT:20,players:{},reason:'',hunters:[],ret:[],stock:[4,4,4,4,4,4,4,4],phone:null,queued:null,drainT:45,kills:0,served:0,trash:2,drops:[],mess:[],mt:0,report:'',up:{},autoPow:0,reviews:[{s:4,t:'Open all night, decent coffee.',n:'Mark H.'},{s:3,t:'It\'s a gas station. It was fine.',n:'Ida B.'},{s:2,t:'Night clerk looked at my ID for like a full minute.',n:'Paul C.'}]}}
 function newPlayer(name,i){const col=PCOL[i%PCOL.length];return {name,col,x:-1+rnd(-.8,.8),z:-1.4,ry:Math.PI,rx:0,fl:1,wep:0,mag:0,res:0,rl:0,med:0,hol:false,carry:null,down:false,bleed:0,dead:false,rev:null,revP:0,cl:null,clP:0,cd:0,
  look:{h:+rnd(1.7,1.88).toFixed(2),skin:pick(SKIN),hairC:pick(HAIR)[0],bald:false,beard:Math.random()<.3,glasses:false,cast:false,eyepatch:false,jacket:col,shirt:'#d8d8d0',pants:'#22263a',shoes:'#141414',eyeC:'#3a2410',hat:true,hatC:'#1a1a1a',top:'jacket',hs:'short',age:30,stubble:Math.random()<.5}}}
 function hostData(id,d){if(!S)return;
@@ -640,7 +650,7 @@ function makeCust(){const hollow=Math.random()<hollowChance(),a=makeLook(),idl=J
  const c={id:Math.floor(Math.random()*1e9),first:pick(FN),last:pick(LN),a,idl,want:Math.floor(Math.random()*8),pump:1+Math.floor(Math.random()*4),
   dob:[1+Math.floor(Math.random()*28),1+Math.floor(Math.random()*12),1950+Math.floor(Math.random()*55)],
   exp:pad(1+Math.floor(Math.random()*28))+'.'+pad(1+Math.floor(Math.random()*12))+'.'+(2027+Math.floor(Math.random()*6)),
-  hollow,anom:hollow?pick(ANOM):null,field:null,x:WP[0][0],z:WP[0][1],ry:Math.PI,st:'enter',wp:1,wait:0,asked:{}};
+  coffee:Math.random()<.35,hollow,anom:hollow?pick(ANOM):null,field:null,x:WP[0][0],z:WP[0][1],ry:Math.PI,st:'enter',wp:1,wait:0,asked:{}};
  a.anom=c.anom;
  if(c.anom==='date')c.exp=N<3&&Math.random()<.4?pick(['31.02.2029','00.13.2030','30.02.2031']):pick(['02.11.2026','17.08.2025','28.10.2026','11.03.2024','30.09.2026']);
  if(c.anom==='mismatch'){c.field=pick(['height','height','hair','note','note']);
@@ -695,6 +705,7 @@ function startGame(){Object.assign(S,{night:1,money:60,stock:[4,4,4,4,4,4,4,4],m
 function endNight(){const s=S;s.phase='morning';s.mt=20;const L=['Customers served: '+s.served,'Hollows killed: '+s.kills];
  let sold=0;s.stock=s.stock.map(v=>{const d=Math.floor(Math.random()*3);sold+=Math.min(v,d);return Math.max(0,v-d)});const day=sold*12;s.money+=day;L.push('Day shift sales: +$'+day+' (the shelves got emptier — restock tonight)');
  if(s.mess.length){const f=s.mess.length*40;s.money=Math.max(0,s.money-f);L.push('Manager found '+s.mess.length+' mess'+(s.mess.length>1?'es':'')+' you didn\'t clean: -$'+f);s.mess=[]}
+ s.trash=Math.min(12,(s.trash||0)+4);
  if(s.door==='broken'){s.money=Math.max(0,s.money-50);L.push('Repairing the smashed front door: -$50')}
  L.push('','Register now: $'+s.money);s.report=L.join('\n');s.hunters=[];s.ret=[];s.cust=null;s.lightsOut=false;fire({type:'morning'})}
 function resetLobby(){S.drops=[];S.phase='lobby';S.cust=null;S.lightsOut=false;S.hunters=[];S.ret=[];S.mess=[];for(const id in S.players){const p=S.players[id];p.down=p.dead=false;p.carry=null}}
@@ -730,7 +741,7 @@ function hostAction(id,a,v){const s=S;if(!s)return;const p=s.players[id];if(!p)r
    if(c.hollow){s.ret.push({c,t:rnd(25,50)});c.st='leave';c.wp=WP.length-2;if(s.stock[c.want]>0)s.stock[c.want]--;const m=Math.round((12+Math.random()*25)*mult);s.money+=m;fire({type:'cash',msg:'+$'+m});
     if(Math.random()<.5)review(5,pick(['The clerk smelled warm. I will come back tonight.','Lovely people work here. I counted them.','Very good store. Very good people inside it.','I liked the clerk. I want to see the clerk again.']),nm)}
    else if(s.stock[c.want]<=0){c.st='leave';c.wp=WP.length-2;review(1,'Didn\'t even have '+SEC[c.want].n.toLowerCase()+'. What is this place?',nm);fire({type:'buzz',msg:'OUT OF '+SEC[c.want].n+'. NO SALE.'})}
-   else{s.stock[c.want]--;const m=Math.round((15+Math.random()*30)*mult);s.money+=m;c.st='leave';c.wp=WP.length-2;fire({type:'cash',msg:'+$'+m});
+   else{s.stock[c.want]--;s.trash=Math.min(12,(s.trash||0)+1);let m=Math.round((15+Math.random()*30)*mult);if(c.coffee){if(p.carry==='coffee'){p.carry=null;m+=18;fire({type:'msg',msg:'COFFEE DELIVERED · +$18 TIP'})}else{m-=5;review(2,'Asked for a coffee. Never got it.',nm)}}s.money+=m;c.st='leave';c.wp=WP.length-2;fire({type:'cash',msg:'+$'+m});
     const empty=s.stock.filter(x=>x===0).length,st=3+decorBonus()+(c.wait<15?.8:-.4)-(empty>2?1:0)+rnd(-.8,.8);
     review(st,st>=4.5?pick(['Clean store, friendly clerk. Rare at 2 AM.','Fast service. Weirdly nice night clerk.','Best gas station in the county, honestly.']):st>=3.5?pick(['Good stop. Shelves were full.','Quick in and out.','Nice little place.']):st>=2.5?pick(['It\'s a gas station. It was fine.','Clerk stared at my ID forever.','Ok. Kind of creepy at night.']):pick(['Half the shelves were empty.','Took ages to get served.','Dirty and slow.']),nm)}}
   else{if(c.hollow){s.money+=40;c.st='flee';c.wp=WP.length-2;fire({type:'refuse_h',msg:'IT STARES AT YOU. THEN IT BACKS OUT THE DOOR.'})}
@@ -745,6 +756,10 @@ function hostAction(id,a,v){const s=S;if(!s)return;const p=s.players[id];if(!p)r
   if(q.hollow)line=q.anom==='mismatch'?pick(['Look at them properly. Not the card. Them.','Something about the next one is off.','Compare. Compare everything.']):pick(['Listen to how the next one talks.','The next one… look at its face.','Read the card twice.']);
   else line=Math.random()<.2?'Something about the next one is off.':pick(['…(breathing)…','Nothing tonight. Not yet.','Keep the shelves full. They notice.','…wrong number.']);
   fire({type:'phone',who:'PHONE',txt:line});return}
+ if(a==='brew'&&!p.carry&&!p.brew&&Math.hypot(p.x-COFFEE[0],p.z-COFFEE[1])<1.3){p.brew=.01;fire({type:'brew',id});return}
+ if(a==='bag'&&!p.carry&&Math.hypot(p.x-BIN[0],p.z-BIN[1])<1.3&&(s.trash||0)>=3){p.carry='trash';s.trash=0;fire({type:'boxup',id});return}
+ if(a==='dump'&&p.carry==='trash'&&Math.hypot(p.x-DUMP[0],p.z-DUMP[1])<2){p.carry=null;s.money+=5;fire({type:'dump',msg:'TRASH OUT · +$5'});return}
+ if(a==='drop'&&p.carry&&p.carry!=='box'&&p.carry!=='mop'){fire({type:'msgto',id,msg:'YOU CAN ONLY PUT DOWN BOXES AND THE MOP'});return}
  if(a==='drop'&&p.carry){s.drops=s.drops||[];const fx=-Math.sin(p.ry),fz=-Math.cos(p.ry);let x=p.x+fx*.7,z=p.z+fz*.7;const t={x,z};collide(t);s.drops.push({id:Math.floor(Math.random()*1e9),k:p.carry,x:+t.x.toFixed(2),z:+t.z.toFixed(2),r:+rnd(0,6.28).toFixed(2)});p.carry=null;p.cl=null;fire({type:'drop',id});return}
  if(a==='pickup'&&!p.carry){let m=null,bd=1.4;for(const d of s.drops||[]){const dd=Math.hypot(d.x-p.x,d.z-p.z);if(dd<bd){bd=dd;m=d}}if(m){s.drops=s.drops.filter(d=>d!==m);p.carry=m.k;fire({type:'boxup',id})}return}
  if(a==='mop'&&Math.hypot(p.x-MOP[0],p.z-MOP[1])<1.6){if(p.carry==='mop')p.carry=null;else if(!p.carry)p.carry='mop';fire({type:'boxup',id});return}
@@ -772,7 +787,7 @@ function custTick(c,dt){
  if(c.st==='enter'){c.ry=Math.PI;const w=WP[c.wp];if(moveTo(c,w[0],w[1],c.a.cast?.9:1.3,dt)){if(c.wp===1)fire({type:'chime'});c.wp++;if(c.wp>=WP.length){c.st='wait';c.wait=0;
    const dirty=S.mess.some(inStore);
    if(dirty&&!c.hollow){review(1,'THERE WAS BLOOD ON THE FLOOR. Calling the health department.',c.first+' '+c.last[0]+'.');S.strikes++;c.st='leave';c.wp=WP.length-2;say('CUSTOMER',pick(['Is that… blood?! I\'m out of here.','Oh my god. What is THAT on the floor?','Nope. Nope. Calling someone about this.']),0);fire({type:'buzz',msg:'THEY SAW THE MESS. COMPLAINT '+S.strikes+'/3'});if(S.strikes>=3)lose('FIRED. THE STORE LOOKED LIKE A CRIME SCENE.');return}
-   const it=SEC[c.want].n.toLowerCase();say('CUSTOMER',c.hollow&&Math.random()<.18?pick(['Good evening. '+it+', please.','Pump '+c.pump+'. And '+it+'. Thank you, clerk.']):pick(['Hey. Pump '+c.pump+' and some '+it+'.','Evening. Just '+it+', and pump '+c.pump+'.','Can I get '+it+'? Pump '+c.pump+'.','Pump '+c.pump+'. Oh, and '+it+'.']),c.hollow)}}}
+   const it=SEC[c.want].n.toLowerCase();say('CUSTOMER',c.hollow&&Math.random()<.18?pick(['Good evening. '+it+', please.','Pump '+c.pump+'. And '+it+'. Thank you, clerk.']):pick(['Hey. Pump '+c.pump+' and some '+it+'.','Evening. Just '+it+', and pump '+c.pump+'.','Can I get '+it+'? Pump '+c.pump+'.','Pump '+c.pump+'. Oh, and '+it+'.'])+(c.coffee?pick([' And a coffee, black.',' Plus a coffee, please.',' And coffee. Big one.']):''),c.hollow)}}}
  else if(c.st==='wait'){c.wait+=dt;if(c.hollow&&c.wait>50&&!c.said){c.said=1;say('CUSTOMER',pick(['I can wait.','I am very patient.','Take your time. I have all night.']),1)}
   else if(!c.hollow&&c.wait>55){c.st='leave';c.wp=WP.length-2;say('CUSTOMER','Forget it. Nobody works here?',0)}}
  else if(c.st==='leave'||c.st==='flee'){if(c.st==='leave')c.ry=0;const w=WP[c.wp];if(moveTo(c,w[0],w[1],c.st==='flee'?2.4:(c.a.cast?.9:1.3),dt)){c.wp--;if(c.wp<0){S.cust=null;S.next=6+Math.random()*7}}}}
@@ -781,6 +796,7 @@ function hostTick(dt){const s=S;syncDoor();
  if(s.phase!=='playing')return;
  s.t+=dt;if(s.t>=6*HOUR){endNight();return}
  for(const id in s.players){const p=s.players[id];if(p.cd>0)p.cd-=dt;
+  if(p.brew){if(p.down||Math.hypot(p.x-COFFEE[0],p.z-COFFEE[1])>1.6){p.brew=0}else{p.brew+=dt;if(p.brew>=3){p.brew=0;p.carry='coffee';fire({type:'boxup',id})}}}
   if(p.rl>0){p.rl-=dt;if(p.rl<=0||p.down){if(!p.down){const w=W[p.wep];if(w&&w.gun){const take=Math.min(w.mag-p.mag,p.res);p.mag+=take;p.res-=take}}p.rl=0}}
   if(p.down&&!p.dead){p.bleed-=dt;if(p.bleed<=0){p.dead=true;p.down=false;fire({type:'dead',id,name:p.name})}}
   if(p.rev){const t=s.players[p.rev];if(!t||!t.down||p.down||p.dead||Math.hypot(t.x-p.x,t.z-p.z)>2){p.rev=null;p.revP=0}else{p.revP+=dt;if(p.revP>=3){t.down=false;t.bleed=0;fire({type:'revived',id:p.rev,name:t.name});p.rev=null;p.revP=0}}}
@@ -802,6 +818,7 @@ function hostTick(dt){const s=S;syncDoor();
  if(!standing().length){lose(Object.values(s.players).some(p=>p.down)?'EVERYONE WENT DOWN. NOBODY LEFT TO HELP.':'NOBODY MADE IT TO 6 AM.');return}
  if(s.lightsOut&&s.brk.who){const p=s.players[s.brk.who];if(!p||p.down||p.dead||Math.hypot(p.x-BRK[0],p.z-BRK[1])>1.9){s.brk={who:null,p:0}}else{s.brk.p+=dt;if(s.brk.p>=4){s.lightsOut=false;s.brk={who:null,p:0};const n=s.hunters.length;s.hunters.slice().forEach(h=>{h.burn=1;killHunter(h,'',40)});fire({type:'power',burn:n,msg:n?'THE LIGHTS SLAM ON. IT BURNS UP AND DIES. +$'+(40*n):'POWER IS BACK.'})}}}
  if(s.autoPow>0){s.autoPow-=dt;if(s.autoPow<=0&&s.lightsOut&&!s.hunters.length){s.lightsOut=false;s.brk={who:null,p:0};fire({type:'power',msg:'IT\'S DEAD. THE POWER FLICKERS BACK ON.'})}}
+ if((s.trash||0)>=10){s.trashT=(s.trashT||0)+dt;if(s.trashT>40){s.trashT=0;review(2,'Trash was overflowing by the counter. Gross.','Anonymous')}}
  s.drainT-=dt;if(s.drainT<=0){s.drainT=rnd(35,55);const i=Math.floor(Math.random()*8);if(s.stock[i]>0)s.stock[i]--}
  if(s.phone){s.phone.t-=dt;if(s.phone.t<=0)s.phone=null}
  s.evT-=dt;if(s.evT<=0){s.evT=14+Math.random()*20;const k=pick(['flicker','knock','bang','whisper','ring','flicker','radio','ring','thunder','thunder','scream','scream']);if(k==='ring'){if(!s.phone&&!s.queued)s.phone={t:12}}else fire({type:k})}}
@@ -838,6 +855,8 @@ function onEvent(e){if(e.msg&&e.type!=='msgto')showMsg(e.msg,3.4);
   case 'hit':blood(e.x,1.3,e.z,8);SFX.hit();SFX.screech();break;
   case 'hkill':if(e.kind==='static')SFX.glitch();else blood(e.x,1,e.z,20);SFX.scream(.8);break;
   case 'drop':SFX.box();break;
+  case 'brew':if(e.id===PID()){nz(3,900,.08,'bandpass',0,2);tn(300,250,3,.03,'sine')}break;
+  case 'dump':SFX.box();tn(90,50,.4,.5);break;
   case 'boxup':if(e.id===PID())SFX.box();break;
   case 'restock':case 'cleaned':SFX.box();break;
   case 'hol':if(e.id===PID())SFX.click();break;
@@ -860,6 +879,7 @@ function onEvent(e){if(e.msg&&e.type!=='msgto')showMsg(e.msg,3.4);
 const me={x:-1,z:-1.4,vx:0,vz:0};let yaw=Math.PI,pitch=0,flOn=true,locked=false,bobT=0,lastStep=0,idOpen=false,idFor=-1,rulesOpen=false,shopOpen=false,pcTab='main',localCd=0,ringT=0,moveAmt=0;const K={};
 function collide(p){for(const b of COL){const cx=clamp(p.x,b.x1,b.x2),cz=clamp(p.z,b.z1,b.z2);const dx=p.x-cx,dz=p.z-cz,d=Math.hypot(dx,dz);
  if(d<R){if(d>1e-4){p.x=cx+dx/d*R;p.z=cz+dz/d*R}else{const o=[[b.x1-R-p.x,0],[b.x2+R-p.x,0],[0,b.z1-R-p.z],[0,b.z2+R-p.z]].sort((a,c)=>Math.abs(a[0]+a[1])-Math.abs(c[0]+c[1]))[0];p.x+=o[0];p.z+=o[1]}}}}
+const nearCoffee=()=>Math.hypot(me.x-COFFEE[0],me.z-COFFEE[1])<1.2,nearBin=()=>Math.hypot(me.x-BIN[0],me.z-BIN[1])<1.2,nearDump=()=>Math.hypot(me.x-DUMP[0],me.z-DUMP[1])<1.9;
 const nearDoor=()=>Math.hypot(me.x+1,me.z-4.35)<1.1&&me.z<4.9;
 const nearCounter=()=>Math.hypot(me.x+1,me.z)<2.4&&me.z<.8;
 const nearBreaker=()=>Math.hypot(me.x-BRK[0],me.z-BRK[1])<1.6;
@@ -917,6 +937,9 @@ function interact(){const p=S.players[PID()];if(!p||p.dead)return;
  if(S.cust&&S.cust.st==='wait'&&nearCounter()){idOpen?closeID():openID();return}
  if(p.carry==='mop'&&nearMess()){act('clean');return}
  if(nearTerm()&&!p.carry){openShop();return}
+ if(!p.carry&&nearCoffee()){act('brew');return}
+ if(!p.carry&&nearBin()){act('bag');return}
+ if(p.carry==='trash'&&nearDump()){act('dump');return}
  if(!p.carry&&nearDrop()){act('pickup');return}
  if(nearMop()&&(!p.carry||p.carry==='mop')){act('mop');return}
  if(!p.carry&&nearPallet()){act('box');return}
@@ -926,8 +949,8 @@ function attack(){const p=S.players[PID()];if(!p||p.down||p.dead||p.carry||p.hol
  if(p.wep===1)SFX.swing();else{(p.wep===2?SFX.pistol:SFX.shotgun)(1);flashL.position.set(me.x-Math.sin(yaw)*.6,1.5,me.z-Math.cos(yaw)*.6);muzzleT=.06}
  act('atk')}
 let chatOpen=false;
-function openChat(){chatOpen=true;clearKeys();const i=$('chatIn');i.style.display='block';i.value='';if(document.pointerLockElement)document.exitPointerLock();setTimeout(()=>i.focus(),0)}
-function closeChat(send){const i=$('chatIn');const t=i.value.trim();i.style.display='none';chatOpen=false;i.blur();if(send&&t)act('chat',t.slice(0,120));if(S&&S.phase==='playing')try{canvas.requestPointerLock()}catch(e){}}
+function openChat(){chatOpen=true;clearKeys();const i=$('chatIn');i.style.display='block';i.value='';setTimeout(()=>i.focus(),0)}
+function closeChat(send){const i=$('chatIn');const t=i.value.trim();i.style.display='none';chatOpen=false;i.blur();canvas.focus&&canvas.focus();clearKeys();if(send&&t)act('chat',t.slice(0,120));if(S&&S.phase==='playing'&&!document.pointerLockElement)try{canvas.requestPointerLock()}catch(e){}}
 $('chatIn').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')closeChat(true);else if(e.key==='Escape')closeChat(false)});
 function chatLine(name,col,txt){const d=document.createElement('div');d.innerHTML='<b style="color:'+col+'">'+esc(name)+':</b> '+esc(txt);$('chatLog').appendChild(d);while($('chatLog').children.length>7)$('chatLog').firstChild.remove();setTimeout(()=>d.style.opacity=.0,12000);setTimeout(()=>d.remove(),13500);tn(1500,1500,.05,.05,'sine')}
 addEventListener('keydown',e=>{if(chatOpen)return;if(joined&&S&&(e.code==='KeyT'||e.code==='Enter')&&!shopOpen){e.preventDefault();openChat();return}K[e.code]=true;if(!joined||!S)return;
@@ -949,7 +972,7 @@ addEventListener('blur',clearKeys);document.addEventListener('visibilitychange',
 document.addEventListener('pointerlockerror',()=>{showMsg('CLICK RESUME AGAIN TO CONTROL',2)});
 canvas.addEventListener('mousedown',e=>{if(!joined||!S||S.phase!=='playing'||shopOpen)return;if(!locked){canvas.requestPointerLock();return}if(e.button===0)attack()});
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas});
-document.addEventListener('mousemove',e=>{if(!locked)return;const ms=.0022*SET.sens;yaw-=e.movementX*ms;pitch=clamp(pitch-e.movementY*ms,-1.4,1.4);swayX=clamp(swayX+e.movementX*.0003,-.04,.04);swayY=clamp(swayY+e.movementY*.0003,-.04,.04)});
+document.addEventListener('mousemove',e=>{if(!locked||chatOpen)return;const ms=.0022*SET.sens;yaw-=e.movementX*ms;pitch=clamp(pitch-e.movementY*ms,-1.4,1.4);swayX=clamp(swayX+e.movementX*.0003,-.04,.04);swayY=clamp(swayY+e.movementY*.0003,-.04,.04)});
 
 /* ---------- UI ---------- */
 $('joinBtn').onclick=()=>{myName=($('nm').value.trim()||'Clerk'+Math.floor(Math.random()*99)).slice(0,14);initAudio();if(AC&&AC.state==='suspended')AC.resume();$('joinBox').style.display='none';join()};
@@ -963,6 +986,7 @@ $('qSel').onchange=()=>{SET.q=+$('qSel').value;DIV=SET.q;resize();saveSet()};
 $('sensIn').oninput=()=>{SET.sens=+$('sensIn').value;saveSet()};
 $('volIn').oninput=()=>{SET.vol=+$('volIn').value;if(master)master.gain.value=SET.vol;saveSet()};
 $('resumeBtn').onclick=()=>{try{canvas.requestPointerLock()}catch(e){}};
+$('focus').addEventListener('mousedown',e=>{if(e.target.closest('select,input'))return;try{canvas.requestPointerLock()}catch(er){}});
 $('againBtn').onclick=()=>{if(!isHost)return;if(S.phase==='morning')act('next');else resetLobby()};
 function setH(el,h){if(el._h!==h){el._h=h;el.innerHTML=h}}
 const esc=s=>String(s).replace(/[<>&]/g,'');
@@ -971,7 +995,7 @@ function updateHUD(){const s=S,play=s.phase==='playing',p=s.players[PID()];
  if(play){const h=Math.floor(s.t/HOUR),m=Math.floor((s.t%HOUR)/HOUR*60);$('clock').textContent=(h===0?12:h)+':'+pad(m)+' AM';
   setH($('money'),'NIGHT '+s.night+' · REGISTER: $'+s.money);setH($('strikes'),'COMPLAINTS: '+'● '.repeat(s.strikes)+'○ '.repeat(Math.max(0,3-s.strikes)));
   const low=SEC.filter((x,i)=>s.stock[i]===0).map(x=>x.n);const dirty=(s.mess||[]).filter(inStore).length;
-  setH($('stockTxt'),(low.length?'<span style="color:#d84">EMPTY: '+low.join(', ')+'</span><br>':'')+(dirty?'<span style="color:#c44">MESSES ON THE FLOOR: '+dirty+'</span>':''));
+  setH($('stockTxt'),(low.length?'<span style="color:#d84">EMPTY: '+low.join(', ')+'</span><br>':'')+(dirty?'<span style="color:#c44">MESSES ON THE FLOOR: '+dirty+'</span><br>':'')+((s.trash||0)>=10?'<span style="color:#c96">TRASH IS OVERFLOWING</span>':''));
   if(p)setH($('wep'),(p.carry==='box'?'CARRYING BOX<br>':p.carry==='mop'?'CARRYING MOP<br>':'')+(p.wep?W[p.wep].n+(W[p.wep].gun?' · '+(p.rl>0?'RELOADING…':p.mag+' / '+p.res):'')+(p.hol?' <span style="opacity:.6">(HOLSTERED · Q)</span>':' <span style="opacity:.6">(Q to holster)</span>'):'NO WEAPON')+(p.med?'<br>MEDKITS: '+p.med:''))}
  setH($('plist'),Object.values(s.players).map(q=>'<div style="color:'+q.col+(q.dead?';text-decoration:line-through;opacity:.5':'')+'">'+esc(q.name)+(q.down?' <span style="color:#c33">DOWN '+Math.ceil(q.bleed)+'s</span>':'')+'</div>').join(''));
  let pr='';
@@ -983,6 +1007,11 @@ function updateHUD(){const s=S,play=s.phase==='playing',p=s.players[PID()];
   else if(s.cust&&s.cust.st==='wait'&&nearCounter())pr=idOpen?'':'[E] CHECK ID &nbsp; [3][4][5] ASK &nbsp; [1] SERVE &nbsp; [2] REFUSE';
   else if(p.carry==='mop'&&nearMess())pr=p.cl?'CLEANING… STAY CLOSE':'[E] CLEAN UP';
   else if(nearTerm()&&!p.carry)pr='[E] OFFICE PC';
+  else if(p.brew)pr='BREWING COFFEE… STAY CLOSE';
+  else if(!p.carry&&nearCoffee())pr='[E] BREW A COFFEE';
+  else if(!p.carry&&nearBin())pr=(s.trash||0)>=3?'[E] TAKE OUT THE TRASH BAG':'TRASH: '+(s.trash||0)+'/10';
+  else if(p.carry==='trash')pr=nearDump()?'[E] THROW IN DUMPSTER':'TAKE THE BAG TO THE DUMPSTER OUTSIDE (LEFT OF THE STORE)';
+  else if(p.carry==='coffee')pr='COFFEE IN HAND · SERVE THE CUSTOMER WHO ORDERED IT';
   else if(!p.carry&&nearDrop()){const d=nearDrop();pr='[E] PICK UP '+(d.k==='mop'?'MOP':'STOCK BOX')}
   else if(nearMop()&&(!p.carry||p.carry==='mop'))pr=p.carry==='mop'?'[E] PUT MOP BACK':'[E] TAKE MOP';
   else if(!p.carry&&nearPallet())pr='[E] PICK UP STOCK BOX';
@@ -992,10 +1021,10 @@ function updateHUD(){const s=S,play=s.phase==='playing',p=s.players[PID()];
  setH($('prompt'),pr);
  if(idOpen&&(!s.cust||s.cust.id!==idFor||s.cust.st!=='wait'||!nearCounter()||!play))closeID();
  if(shopOpen&&(!nearTerm()||!play||(p&&p.down)))closeShop();else if(shopOpen&&frame%15===0)renderPC();
- let bp=-1;if(play&&p){if(s.lightsOut&&s.brk.who===PID())bp=s.brk.p/4;else if(p.rev)bp=p.revP/3;else if(p.cl){const m=s.mess.find(x=>x.id===p.cl);if(m)bp=p.clP/(m.body?4:2.5)}}
+ let bp=-1;if(play&&p&&p.brew)bp=p.brew/3;else if(play&&p){if(s.lightsOut&&s.brk.who===PID())bp=s.brk.p/4;else if(p.rev)bp=p.revP/3;else if(p.cl){const m=s.mess.find(x=>x.id===p.cl);if(m)bp=p.clP/(m.body?4:2.5)}}
  $('bar').style.display=bp>=0?'block':'none';if(bp>=0)$('bar').firstChild.style.width=(bp*100)+'%';
  const dt=play&&p&&(p.down||p.dead);$('down').style.display=dt&&!KILL?'block':'none';if(KILL)$('prompt').innerHTML='';if(dt)setH($('down'),p.dead?'DEAD — SPECTATING UNTIL MORNING':'DOWN — BLEEDING OUT '+Math.ceil(p.bleed)+'s · CRAWL TO A TEAMMATE'+(p.med?' · [E] USE MEDKIT':''));
- $('focus').style.display=play&&!locked&&!shopOpen?'flex':'none';$('stam').style.display=play&&p&&!p.down&&!p.dead?'block':'none';$('stam').firstChild.style.width=(stam*100)+'%';$('stam').firstChild.style.background=stam<.25?'#c44':'#d8d0a0';
+ $('focus').style.display=play&&!locked&&!shopOpen&&!chatOpen?'flex':'none';$('stam').style.display=play&&p&&!p.down&&!p.dead?'block':'none';$('stam').firstChild.style.width=(stam*100)+'%';$('stam').firstChild.style.background=stam<.25?'#c44':'#d8d0a0';
  $('menu').style.display=s.phase==='lobby'?'flex':'none';
  if(s.phase==='lobby'){$('lobbyBox').style.display='block';setH($('players'),Object.values(s.players).map(q=>'<div style="color:'+q.col+'">▸ '+esc(q.name)+'</div>').join(''));$('startBtn').style.display=isHost?'block':'none';$('waitTxt').style.display=isHost?'none':'block'}
  const end=s.phase==='morning'||s.phase==='lose';$('end').style.display=end?'flex':'none';
@@ -1029,6 +1058,22 @@ function updateCar(c,dt){if(c&&car.id!==c.id){if(car.g)scene.remove(car.g);car.g
  else{const k=clamp(car.t/4,0,1);if(k<.35){const q=ease(k/.35);x=PX;z=PZ+(26-PZ)*q;ry=Math.PI-q*Math.PI/2;mv=1}else{const q=ease((k-.35)/.65);x=PX+(48-PX)*q;z=26;ry=Math.PI/2;mv=1}if(k>=1){scene.remove(car.g);car.g=null;car.id=null;car.light.intensity=0;if(engG)engG.gain.value=0;return}}
  car.g.position.set(x,0,z);car.g.rotation.y=ry;car.light.position.set(x+Math.sin(ry)*3,.8,z+Math.cos(ry)*3);car.light.intensity=mv?1:.3;
  if(engG){const d=distTo(x,z);engG.gain.setTargetAtTime(clamp(1-d/40,0,1)*(mv?.1:.025),AC.currentTime,.2);engO.frequency.setTargetAtTime(mv?55:34,AC.currentTime,.3)}}
+
+/* ---------- trash bin + dumpster ---------- */
+box(-3.85,-3.35,0,.7,-.6,-.1,L(0x2a3a2a));const binFill=box(-3.8,-3.4,.1,.68,-.55,-.15,L(0x111111),false);
+box(-10.2,-7.8,0,1.3,5.8,7.2,L(0x1f4a2a));box(-10.25,-7.75,1.3,1.38,5.75,7.25,L(0x17361f),false);
+poster(['TRASH'],'#1f4a2a','#ddd',.8,.3,-9,1,7.21,0);
+
+/* ---------- glow halos + sky ---------- */
+const haloTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.25,'rgba(255,255,255,.35)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
+const halos=[];function halo(x,y,z,sz,col,grp){const m=new THREE.SpriteMaterial({map:haloTex,color:col,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false});const sp=new THREE.Sprite(m);sp.position.set(x,y,z);sp.scale.set(sz,sz,1);scene.add(sp);halos.push({sp,grp,o:.55});return sp}
+[[-2,2.9,.75],[3.8,2.9,-.25],[3.8,2.9,2.45],[0,2.9,-7.05]].forEach(([x,y,z])=>halo(x,y,z,1.6,0xe8f0e0,'store'));
+[[-3,4.1,11],[3,4.1,11],[-3,4.1,13],[3,4.1,13]].forEach(([x,y,z])=>halo(x,y,z,2.6,0xc8d4ff,'can'));
+halo(0,4.4,16.3,3,0xe8a020,'sign');halo(-3,1.25,12.4,.5,0x30ff60,'pump');halo(3,1.25,12.4,.5,0x30ff60,'pump');
+const moon=new THREE.Mesh(new THREE.SphereGeometry(2.2,16,12),new THREE.MeshBasicMaterial({color:0xd8dcc8,fog:false}));moon.position.set(-40,38,70);scene.add(moon);
+const mh=halo(-40,38,69,22,0x8090a0,'moon');mh.material.fog=false;mh.material.opacity=.35;
+const cloudM=new THREE.MeshBasicMaterial({color:0x0c0e14,transparent:true,opacity:.85,fog:false,depthWrite:false});
+for(let i=0;i<14;i++){const c=new THREE.Mesh(new THREE.SphereGeometry(rnd(8,16),8,6),cloudM);c.position.set(rnd(-90,90),rnd(30,45),rnd(30,100));c.scale.y=.3;scene.add(c)}
 
 /* ---------- extra visuals ---------- */
 const doorCol={x1:-1.8,x2:-.2,z1:4.85,z2:5.15,door:1};
@@ -1077,7 +1122,7 @@ function updateWorld(dt,now){const s=S,play=s.phase==='playing';let plI=0;
  amb.intensity=s.lightsOut?.05:.3*Math.max(base,.3);redL.intensity=s.lightsOut?.55+Math.sin(now/300)*.3:0;
  brkLampM.color.set(s.lightsOut?0xff2010:0x20ff40);
  const stalking=s.hunters&&s.hunters.some(h=>h.st==='approach');
- const canOn=s.lightsOut?.3:(stalking&&Math.random()<.3?.1:1);canL.intensity=canOn;canLampM.color.setScalar(canOn>.5?.75:.1);
+ const canOn=s.lightsOut?.3:(stalking&&Math.random()<.3?.1:1);canL.intensity=canOn;canLampM.color.setScalar(canOn>.5?.75:.1);halos.forEach(h=>{const on=h.grp==='store'?base:h.grp==='can'?canOn:h.grp==='sign'||h.grp==='pump'?(s.lightsOut?.15:1):1;h.sp.material.opacity=h.o*on});
  if(humG)humG.gain.value=base*.004;
  fl.intensity=flOn&&play?1.7:0;
  if(muzzleT>0){muzzleT-=dt;flashL.intensity=2.5}else flashL.intensity=0;
@@ -1090,7 +1135,7 @@ function updateWorld(dt,now){const s=S,play=s.phase==='playing';let plI=0;
   animChar(o.g,mv>.01,dt,p.down?'down':'');if(!p.down){o.g.userData.neck.rotation.x=-p.rx*.6;o.g.rotation.x=0}
   {const sl=plPool[plI++];if(sl){const hp=new THREE.Vector3(0,.2,.2);o.g.userData.neck.localToWorld(hp);sl.position.copy(hp);const tp=new THREE.Vector3(0,.2,2);o.g.userData.neck.localToWorld(tp);sl.target.position.copy(tp);sl.intensity=p.fl&&play&&!p.down&&!p.dead?1.4:0}}
   const wk=(p.hol||p.carry)?'':String(p.wep);if(o.wk!==wk){o.hand.children.filter(c=>c.userData.w).forEach(c=>o.hand.remove(c));if(wk&&p.wep){const m=wepMesh(p.wep);m.userData.w=1;m.position.set(0,-.33,.05);o.hand.add(m)}o.wk=wk}
-  if(o.carryK!==p.carry){if(o.carryO){o.g.remove(o.carryO);o.carryO=null}if(p.carry==='box'){o.carryO=new THREE.Mesh(new THREE.BoxGeometry(.42,.3,.32),crateM);o.carryO.position.set(0,1.1,.35)}else if(p.carry==='mop'){o.carryO=mopMesh();o.carryO.rotation.x=-.9;o.carryO.position.set(.3,1.1,.2)}if(o.carryO)o.g.add(o.carryO);o.carryK=p.carry}
+  if(o.carryK!==p.carry){if(o.carryO){o.g.remove(o.carryO);o.carryO=null}if(p.carry==='box'){o.carryO=new THREE.Mesh(new THREE.BoxGeometry(.42,.3,.32),crateM);o.carryO.position.set(0,1.1,.35)}else if(p.carry==='trash'){o.carryO=new THREE.Mesh(new THREE.SphereGeometry(.2,8,6),L(0x111111));o.carryO.position.set(.3,.7,.1)}else if(p.carry==='coffee'){o.carryO=new THREE.Mesh(new THREE.CylinderGeometry(.04,.032,.12,10),L(0xf0ead8));o.carryO.position.set(.3,1.1,.25)}else if(p.carry==='mop'){o.carryO=mopMesh();o.carryO.rotation.x=-.9;o.carryO.position.set(.3,1.1,.2)}if(o.carryO)o.g.add(o.carryO);o.carryK=p.carry}
   if(p.carry==='box')o.g.userData.arms.forEach(a=>a.rotation.x=-1.1);else if(p.wep&&!p.hol&&!p.down&&!p.carry)o.g.userData.arms[1].rotation.x=-.9}
  for(let i=plI;i<plPool.length;i++)plPool[i].intensity=0;
  for(const id in others)if(!s.players[id]||id===PID()){scene.remove(others[id].g);delete others[id]}
@@ -1128,6 +1173,7 @@ function updateWorld(dt,now){const s=S,play=s.phase==='playing';let plI=0;
  if(staticT>0)staticT-=dt;const danger=(s.hunters&&s.hunters.length)||staticT>0;
  if(radioG){radioG.gain.setTargetAtTime(play&&!s.lightsOut&&!danger?.03:0,AC.currentTime,.3);staticG.gain.setTargetAtTime(danger?.04+Math.random()*.03:0,AC.currentTime,.05)}
  if(s.phone){ringT-=dt;if(ringT<=0){ringT=1.6;const d=distTo(-.7,.9);if(d<20)SFX.ring()}}
+ binFill.scale.y=Math.max(.05,Math.min(1,(s.trash||0)/10));binFill.position.y=.1+.29*binFill.scale.y;
  if(s.stock)SEC.forEach((x,i)=>x.lv.forEach((g,l)=>g.visible=s.stock[i]>l));
  if(doorShake>0){doorShake-=dt;backDoor.position.x=5.985+(Math.random()-.5)*.06}else backDoor.position.x=5.985;
  const myP=s.players[PID()];mopStick.visible=!(myP&&myP.carry==='mop');
@@ -1142,7 +1188,9 @@ function updateWorld(dt,now){const s=S,play=s.phase==='playing';let plI=0;
 
 /* ---------- loop ---------- */
 let last=performance.now(),netT=0;
-function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;frame++;
+let fpsAcc=0,fpsN=0,autoQ=false;
+function loop(now){requestAnimationFrame(loop);const rdt=(now-last)/1000;const dt=Math.min(.05,rdt);last=now;frame++;
+ if(!document.hidden&&rdt<.5){fpsAcc+=rdt;fpsN++;if(fpsAcc>4){const fps=fpsN/fpsAcc;fpsAcc=0;fpsN=0;if(fps<32&&DIV<3&&!autoQ){autoQ=true;DIV=Math.min(3,DIV+.6);resize();showMsg('LOWERED GRAPHICS FOR SMOOTHER PLAY (ESC TO CHANGE)',2.5)}}}
  $('noise').style.transform='translate('+rnd(-40,0)+'px,'+rnd(-40,0)+'px)';
  if(localCd>0)localCd-=dt;
  if(joined&&S){const play=S.phase==='playing',p=S.players[PID()];
