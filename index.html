@@ -98,7 +98,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 <div class="row2">GRAPHICS<select id="qSel"><option value="3">Low (fast)</option><option value="2.2">Medium</option><option value="1.5">High</option><option value="1">Ultra</option></select></div>
 <div class="row2">MOUSE SENSITIVITY<input id="sensIn" type="range" min="0.3" max="2.5" step="0.05"></div>
 <div class="row2">VOLUME<input id="volIn" type="range" min="0" max="1.5" step="0.05"></div>
-<div class="small" style="margin-top:12px">WASD move · SHIFT sprint · CLICK attack · R reload · Q holster · E interact · F flashlight · H rules</div></div></div>
+<div class="small" style="margin-top:12px">WASD move · SHIFT sprint · CLICK attack · R reload · Q holster · E interact · G drop item · F flashlight · H rules</div></div></div>
 <div id="stam"><div></div></div>
 <div id="idcard"><h3>STATE IDENTIFICATION</h3><div class="row"><canvas id="photo" width="80" height="100"></canvas><div><b>NAME</b><span id="idName"></span><b>DATE OF BIRTH</b><span id="idDob"></span><b>EXPIRES</b><span id="idExp"></span><b>HEIGHT · HAIR · EYES</b><span id="idBody"></span><b>NOTES</b><span id="idNote"></span></div></div>
 <div id="idq">[3] Where are you headed? &nbsp; [4] <span id="q4"></span><br>[5] When's your birthday? &nbsp; [1] SERVE &nbsp; [2] REFUSE &nbsp; [E] close</div></div>
@@ -118,7 +118,7 @@ pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.6;color:#bbb;
 12. Keep the shelves stocked. Grab boxes from the pallet in the back room. No stock = no sale. The day shift sells stuff too.
 13. Survive until 6:00 AM. Then do it again tomorrow night. Money, weapons and stock carry over.</pre><div class="small" style="margin-top:12px">[H] close</div></div></div>
 <div id="menu"><div class="panel">
- <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR · <span style="color:#666">v12</span></div>
+ <h1>NIGHT STOP</h1><div class="sub">24H GAS STATION · NIGHT SHIFT · CO-OP HORROR · <span style="color:#666">v13</span></div>
  <div id="joinBox"><input id="nm" maxlength="14" placeholder="your name"><button id="joinBtn">CLOCK IN</button><button id="privBtn">CREATE PRIVATE ROOM</button><div class="small" id="roomTxt" style="margin-top:8px"></div></div>
  <div id="lobbyBox" style="display:none"><div class="small">ON SHIFT TONIGHT:</div><div id="players"></div>
   <button id="copyBtn">COPY INVITE LINK</button><button id="startBtn">START SHIFT</button><div id="waitTxt" class="small" style="display:none;margin-top:10px">Waiting for the host to start the shift…</div></div>
@@ -235,6 +235,7 @@ const SFX={
  breath(){nz(.5,900,.05,'bandpass',0,1.2);nz(.45,700,.04,'bandpass',.6,1.2)},
  crunch(){[0,.07,.15,.21].forEach(t=>{nz(.06,rnd(2500,4500),.7,'highpass',t);tn(rnd(160,240),60,.08,.5,'square',t)});tn(55,25,.5,.8,'sine',.05)},
  rip(){nz(.7,1400,.8,'bandpass',0,.7);nz(.5,350,.9,'lowpass',.05);tn(110,35,.6,.7,'sawtooth');setTimeout(()=>tn(3600,3500,4,.06,'sine',0,master),300)},
+ squelch(v){nz(.18,600,.25*v,'bandpass',0,2);tn(180,90,.12,.12*v,'sine')},
  thud(){tn(70,30,.3,.7);nz(.2,400,.5)},
  jump(){nz(.9,2500,.7,'bandpass',0,1);tn(1600,300,.9,.35,'sawtooth');tn(2100,500,.9,.2,'square');tn(90,30,1,.8,'sine')}
 };
@@ -412,7 +413,7 @@ function headTex(a,mode){const W=128,H=64,c=document.createElement('canvas');c.w
  R(F-2,28,4,10,'rgba(0,0,0,.1)');R(F-1,29,1,8,'rgba(255,255,255,.08)');R(F-4,37,8,2,'rgba(0,0,0,.2)');R(F-3,38,2,1,'rgba(0,0,0,.45)');R(F+1,38,2,1,'rgba(0,0,0,.45)');
  if(a.beard){const hc=a.hairC;R(F-19,36,38,20,hc);R(F-15,52,30,6,hc);for(let i=0;i<120;i++){g.fillStyle='rgba(0,0,0,'+Math.random()*.25+')';g.fillRect(F-19+Math.random()*38|0,36+Math.random()*22|0,1,1)}R(F-6,42,12,5,a.skin)}
  else if(a.stubble){for(let i=0;i<160;i++){g.fillStyle='rgba(20,15,10,'+Math.random()*.25+')';g.fillRect(F-17+Math.random()*34|0,38+Math.random()*16|0,1,1)}}
- if(hunt){R(F-10,41,20,10,'#160000');for(let x=F-9;x<F+10;x+=2){R(x,41,1,2,'#d8d0c0');R(x,49,1,2,'#d8d0c0')}g.strokeStyle='rgba(60,0,0,.5)';g.beginPath();g.moveTo(F-18,20);g.lineTo(F-12,34);g.moveTo(F+18,22);g.lineTo(F+13,33);g.stroke();R(0,0,W,H,'rgba(70,90,70,.22)')}
+ if(hunt){R(F-10,41,20,10,'#160000');for(let x=F-9;x<F+10;x+=2){R(x,41,1,2,'#d8d0c0');R(x,49,1,2,'#d8d0c0')}for(let k=0;k<9;k++){const x=F-14+Math.random()*28,y0=k<4?28:46;g.fillStyle='rgba(110,0,0,'+rnd(.5,.9)+')';g.fillRect(x|0,y0,rnd(1,3)|0,rnd(6,18)|0)}g.fillStyle='rgba(90,0,0,.55)';g.fillRect(F-12,46,24,14);for(let k=0;k<5;k++){g.fillStyle='rgba(150,40,40,.8)';g.fillRect(rnd(0,W)|0,rnd(10,50)|0,rnd(3,7)|0,rnd(2,5)|0)}g.strokeStyle='rgba(60,0,0,.5)';g.beginPath();g.moveTo(F-18,20);g.lineTo(F-12,34);g.moveTo(F+18,22);g.lineTo(F+13,33);g.stroke();R(0,0,W,H,'rgba(70,90,70,.22)')}
  else if(a.anom==='smile'){R(F-11,43,22,2,'#5a1a14');R(F-12,41,2,2,'#5a1a14');R(F+10,41,2,2,'#5a1a14');for(let x=F-9;x<F+9;x+=2)R(x,43,1,1,'#ddd')}
  else{const lip=a.lip||'#9a5048';R(F-6,43,12,1,shade(lip,.75));R(F-5,44,10,2,lip);R(F-4,45,8,1,shade(lip,1.15));R(F-7,43,1,1,'rgba(0,0,0,.25)');R(F+6,43,1,1,'rgba(0,0,0,.25)')}
  if(a.glasses&&!hunt){for(const x of ex){g.fillStyle='rgba(170,200,230,.18)';g.fillRect(x-2,24,13,8);g.fillStyle='#141414';g.fillRect(x-2,23,13,1);g.fillRect(x-2,31,13,1);g.fillRect(x-2,23,1,9);g.fillRect(x+10,23,1,9)}R(F-5,26,10,1,'#141414');R(F-21,26,4,1,'#141414');R(F+17,26,4,1,'#141414')}
@@ -456,12 +457,12 @@ function animChar(g,moving,dt,mode){const u=g.userData;u.ph+=dt*(moving?7.5:1.2)
  if(mode==='down'){g.rotation.x=-Math.PI/2;g.position.y=.16;u.arms.forEach(a=>a.rotation.x=-2.6);return}
  g.rotation.x=0;const limp=u.a.cast?.3:1;
  u.legs.forEach((l,i)=>{l.rotation.x=(i?-s:s)*.55*(i===0?limp:1);l.userData.kn.rotation.x=moving?Math.max(0,-Math.cos(u.ph+(i?Math.PI:0)))*.75:0});
- if(mode==='hunt'){curseTick(g,dt);const e=u.curse||0;u.arms.forEach((a,i)=>{a.rotation.x=-1.4*(1-e)+(-.5+Math.sin(u.ph*1.3+i*2)*.5)*e+Math.sin(u.ph*1.7+i)*.18;a.rotation.z=(i?-.12:.12)*(1+e*2);a.userData.el.rotation.x=-.2-e*.6});u.root.rotation.x=.18+e*.35;if(u.jaw)u.jaw.rotation.x=e*(.45+Math.abs(Math.sin(t*9))*.35);if(e>.5&&Math.random()<dt*2.5)u.neck.rotation.set(rnd(-.5,.5),rnd(-.9,.9),rnd(-.7,.7));u.neck.rotation.z=Math.sin(u.ph*3)*.12+(Math.random()<.04?rnd(-.5,.5):0);u.mouth.scale.y=3}
+ if(mode==='hunt'){curseTick(g,dt);const e=u.curse||0;u.arms.forEach((a,i)=>{a.rotation.x=-1.4*(1-e)+(-.5+Math.sin(u.ph*1.3+i*2)*.5)*e+Math.sin(u.ph*1.7+i)*.18;a.rotation.z=(i?-.12:.12)*(1+e*2);a.userData.el.rotation.x=-.2-e*.6});u.root.rotation.x=.18+e*.35;if(u.jaw)u.jaw.rotation.x=e*(.45+Math.abs(Math.sin(t*9))*.35);if(u.strands)u.strands.forEach((st,i)=>{st.rotation.x=Math.sin(t*6+i)*.5;st.rotation.z=Math.sin(t*4.3+i*2)*.4});if(e>.5&&Math.random()<dt*2.5)u.neck.rotation.set(rnd(-.5,.5),rnd(-.9,.9),rnd(-.7,.7));u.neck.rotation.z=Math.sin(u.ph*3)*.12+(Math.random()<.04?rnd(-.5,.5):0);u.mouth.scale.y=3}
  else{u.root.rotation.x=0;if(!u.a.cast)u.arms[0].rotation.x=s*.45;u.arms[1].rotation.x=-s*.45;u.arms.forEach(a=>{a.userData.el.rotation.x=moving?-.35:-.1;a.rotation.z=0});if(u.a.cast)u.arms[0].rotation.z=-.22;
   u.root.position.y=Math.sin(t*1.6+u.ph)*.006;u.root.scale.z=(1+(u.a.h/1.8-1)*.45)*(1+Math.sin(t*1.6+u.ph)*.012);u.neck.rotation.x=Math.sin(t*.7+u.ph)*.04;u.neck.rotation.y+=(u.lookY-u.neck.rotation.y)*Math.min(1,dt*4);
   if(u.a.anom==='twitch'){if(Math.random()<dt*.35){u.twT=.09;u.neck.rotation.set(rnd(-.3,.3),rnd(-.4,.4),rnd(-.2,.2))}if(u.twT>0){u.twT-=dt;if(u.twT<=0)u.neck.rotation.set(0,0,0)}}}
  g.position.y=moving?Math.abs(Math.sin(u.ph))*.035:0}
-const curseSkin=new THREE.MeshLambertMaterial({color:0x3a4238}),boneM=new THREE.MeshLambertMaterial({color:0xcfc6ae}),voidM=new THREE.MeshBasicMaterial({color:0x050000}),eyeGlowM=new THREE.MeshBasicMaterial({color:0xff2a14}),fleshM=new THREE.MeshLambertMaterial({color:0x5a1010});
+const goreM=new THREE.MeshLambertMaterial({color:0x6e0c0c,emissive:0x1a0000}),sinewM=new THREE.MeshLambertMaterial({color:0x8a2a24}),curseSkin=new THREE.MeshLambertMaterial({color:0x3a4238}),boneM=new THREE.MeshLambertMaterial({color:0xcfc6ae}),voidM=new THREE.MeshBasicMaterial({color:0x050000}),eyeGlowM=new THREE.MeshBasicMaterial({color:0xff2a14}),fleshM=new THREE.MeshLambertMaterial({color:0x5a1010});
 function makeHunterLook(g,instant){const u=g.userData;if(u.hunt)return;u.hunt=true;u.headM.map=headTex(u.a,'hunt');u.headM.needsUpdate=true;u.curse=instant?1:0;
  const add=(geo,m,x,y,z,par,rx,ry,rz)=>{const ms=new THREE.Mesh(geo,m);ms.position.set(x,y,z);if(rx!==undefined)ms.rotation.set(rx,ry||0,rz||0);par.add(ms);return ms};
  const extra=new THREE.Group();u.root.add(extra);u.extra=extra;
@@ -478,6 +479,12 @@ function makeHunterLook(g,instant){const u=g.userData;if(u.hunt)return;u.hunt=tr
  [[-.05,.27],[.05,.27],[-.09,.23],[.09,.23],[0,.31]].forEach(([x,y])=>add(new THREE.SphereGeometry(.014,6,5),eyeGlowM,x,y,.13,u.neck));
  // swap skin to a grey-dead tone
  g.traverse(m=>{if(m.isMesh&&m.material&&m.material.color&&m.material!==shadowM&&m.material!==metalM&&!m.userData.claw&&m.material!==boneM&&m.material!==voidM&&m.material!==eyeGlowM&&m.material!==fleshM){m.userData.c0=m.material.color.clone()}});
+ // exposed flesh: torn open chest, raw spine strip, hanging sinew from the jaw, blood-soaked claws
+ add(new THREE.BoxGeometry(.2,.26,.03),goreM,0,1.28,.14,extra);for(let k=0;k<4;k++)add(new THREE.BoxGeometry(.16,.018,.02),boneM,0,1.19+k*.06,.158,extra);
+ add(new THREE.BoxGeometry(.07,.5,.05),goreM,0,1.38,-.165,extra);
+ u.strands=[];for(let k=0;k<4;k++){const st=new THREE.Group();st.position.set(-.06+k*.04,-.04,.1);jaw.add(st);const m=add(new THREE.BoxGeometry(.012,.14+k%2*.08,.012),sinewM,0,-.08,0,st);u.strands.push(st)}
+ u.arms.forEach(a=>{const el=a.userData.el;add(new THREE.SphereGeometry(.052,6,5),goreM,0,-.3,0,el,0,0,0).scale.set(1,1.1,.9)});
+ [[-.25,1.05],[.2,.95],[-.1,.75],[.12,1.4]].forEach(([x,y])=>add(new THREE.CircleGeometry(rnd(.04,.07),6),goreM,x,y,.13,extra));
  extra.scale.setScalar(u.curse||.001);jaw.scale.setScalar(Math.max(.001,u.curse))}
 function curseTick(g,dt){const u=g.userData;if(!u.hunt||u.curse>=1&&u.cursed)return;u.curse=Math.min(1,u.curse+dt*.8);const c=u.curse,e=c*c*(3-2*c);
  u.extra.scale.setScalar(Math.max(.001,e));u.jaw.scale.setScalar(Math.max(.001,e));
@@ -558,7 +565,7 @@ function hostLost(){if(!joined||isHost)return;joined=false;S=null;clearInterval(
 function relayLost(){joined=false;S=null;isHost=false;clearInterval(beaconTimer);clearInterval(watchTimer);mq=null;showMsg('LOST CONNECTION TO THE SERVER — RECONNECTING',3);$('menu').style.display='flex';setTimeout(join,1500)}
 
 /* ---------- host: setup ---------- */
-function freshState(){return {door:'open',doorHp:7,phase:'lobby',night:1,t:0,money:60,strikes:0,cust:null,next:6,lightsOut:false,brk:{who:null,p:0},evT:20,players:{},reason:'',hunters:[],ret:[],stock:[4,4,4,4,4,4,4,4],phone:null,queued:null,drainT:45,kills:0,served:0,mess:[],mt:0,report:'',up:{},autoPow:0,reviews:[{s:4,t:'Open all night, decent coffee.',n:'Mark H.'},{s:3,t:'It\'s a gas station. It was fine.',n:'Ida B.'},{s:2,t:'Night clerk looked at my ID for like a full minute.',n:'Paul C.'}]}}
+function freshState(){return {door:'open',doorHp:7,phase:'lobby',night:1,t:0,money:60,strikes:0,cust:null,next:6,lightsOut:false,brk:{who:null,p:0},evT:20,players:{},reason:'',hunters:[],ret:[],stock:[4,4,4,4,4,4,4,4],phone:null,queued:null,drainT:45,kills:0,served:0,drops:[],mess:[],mt:0,report:'',up:{},autoPow:0,reviews:[{s:4,t:'Open all night, decent coffee.',n:'Mark H.'},{s:3,t:'It\'s a gas station. It was fine.',n:'Ida B.'},{s:2,t:'Night clerk looked at my ID for like a full minute.',n:'Paul C.'}]}}
 function newPlayer(name,i){const col=PCOL[i%PCOL.length];return {name,col,x:-1+rnd(-.8,.8),z:-1.4,ry:Math.PI,rx:0,fl:1,wep:0,mag:0,res:0,rl:0,med:0,hol:false,carry:null,down:false,bleed:0,dead:false,rev:null,revP:0,cl:null,clP:0,cd:0,
  look:{h:+rnd(1.7,1.88).toFixed(2),skin:pick(SKIN),hairC:pick(HAIR)[0],bald:false,beard:Math.random()<.3,glasses:false,cast:false,eyepatch:false,jacket:col,shirt:'#d8d8d0',pants:'#22263a',shoes:'#141414',eyeC:'#3a2410',hat:true,hatC:'#1a1a1a',top:'jacket',hs:'short',age:30,stubble:Math.random()<.5}}}
 function hostData(id,d){if(!S)return;
@@ -631,7 +638,7 @@ function endNight(){const s=S;s.phase='morning';s.mt=20;const L=['Customers serv
  if(s.mess.length){const f=s.mess.length*40;s.money=Math.max(0,s.money-f);L.push('Manager found '+s.mess.length+' mess'+(s.mess.length>1?'es':'')+' you didn\'t clean: -$'+f);s.mess=[]}
  if(s.door==='broken'){s.money=Math.max(0,s.money-50);L.push('Repairing the smashed front door: -$50')}
  L.push('','Register now: $'+s.money);s.report=L.join('\n');s.hunters=[];s.ret=[];s.cust=null;s.lightsOut=false;fire({type:'morning'})}
-function resetLobby(){S.phase='lobby';S.cust=null;S.lightsOut=false;S.hunters=[];S.ret=[];S.mess=[];for(const id in S.players){const p=S.players[id];p.down=p.dead=false;p.carry=null}}
+function resetLobby(){S.drops=[];S.phase='lobby';S.cust=null;S.lightsOut=false;S.hunters=[];S.ret=[];S.mess=[];for(const id in S.players){const p=S.players[id];p.down=p.dead=false;p.carry=null}}
 
 /* ---------- host: answers ---------- */
 function q4Text(l){return l.cast?'What happened to your leg?':l.glasses?'Need those glasses to drive?':l.eyepatch?'What happened to your eye?':'How tall are you?'}
@@ -678,6 +685,8 @@ function hostAction(id,a,v){const s=S;if(!s)return;const p=s.players[id];if(!p)r
   if(q.hollow)line=q.anom==='mismatch'?pick(['Look at them properly. Not the card. Them.','Something about the next one is off.','Compare. Compare everything.']):pick(['Listen to how the next one talks.','The next one… look at its face.','Read the card twice.']);
   else line=Math.random()<.2?'Something about the next one is off.':pick(['…(breathing)…','Nothing tonight. Not yet.','Keep the shelves full. They notice.','…wrong number.']);
   fire({type:'phone',who:'PHONE',txt:line});return}
+ if(a==='drop'&&p.carry){s.drops=s.drops||[];const fx=-Math.sin(p.ry),fz=-Math.cos(p.ry);let x=p.x+fx*.7,z=p.z+fz*.7;const t={x,z};collide(t);s.drops.push({id:Math.floor(Math.random()*1e9),k:p.carry,x:+t.x.toFixed(2),z:+t.z.toFixed(2),r:+rnd(0,6.28).toFixed(2)});p.carry=null;p.cl=null;fire({type:'drop',id});return}
+ if(a==='pickup'&&!p.carry){let m=null,bd=1.4;for(const d of s.drops||[]){const dd=Math.hypot(d.x-p.x,d.z-p.z);if(dd<bd){bd=dd;m=d}}if(m){s.drops=s.drops.filter(d=>d!==m);p.carry=m.k;fire({type:'boxup',id})}return}
  if(a==='mop'&&Math.hypot(p.x-MOP[0],p.z-MOP[1])<1.6){if(p.carry==='mop')p.carry=null;else if(!p.carry)p.carry='mop';fire({type:'boxup',id});return}
  if(a==='clean'&&p.carry==='mop'){let m=null,bd=1.6;for(const x of s.mess){const d=Math.hypot(x.x-p.x,x.z-p.z);if(d<bd){bd=d;m=x}}if(m){p.cl=m.id;p.clP=0;fire({type:'brk'})}return}
  if(a==='box'&&!p.carry&&Math.hypot(p.x-PALLET[0],p.z-PALLET[1])<1.6){p.carry='box';fire({type:'boxup',id});return}
@@ -719,7 +728,7 @@ function hostTick(dt){const s=S;syncDoor();
  if(!s.cust){s.next-=dt;if(s.next<=0){s.cust=s.queued||makeCust();s.queued=null}}else custTick(s.cust,dt);
  if(s.phase!=='playing')return;
  for(const r of s.ret){r.t-=dt;if(r.t<=0){r.done=1;addHunter(r.c,rnd(-8,8),27,'approach');fire({type:'stalk'})}}s.ret=s.ret.filter(r=>!r.done);
- const sp=2.2+s.t/HOUR*.2+(s.night-1)*.08;
+ const sp=Math.min(2.5,1.85+s.t/HOUR*.1+(s.night-1)*.05);
  for(const h of s.hunters.slice()){
   if(h.st==='approach'){if(h.sx===undefined){h.sx=pick([-4.6,-3.2,1.4,3,4.6]);}navMove(h,h.sx,5.8,1.2,dt);if(Math.hypot(h.x-h.sx,h.z-5.8)<.25){h.st='stare';h.stT=rnd(3,5);h.ry=Math.PI;fire({type:'stare',x:h.x})}continue}
   if(h.st==='stare'){h.ry=Math.PI;h.stT-=dt;if(h.stT<=0){h.st='hunt';h.delay=.3;blackout('SOMETHING CAME BACK.')}continue}
@@ -766,6 +775,7 @@ function onEvent(e){if(e.msg&&e.type!=='msgto')showMsg(e.msg,3.4);
   case 'shot':if(e.id!==PID()){const d=distTo(e.x,e.z),v=clamp(1-d/30,.15,1);if(e.w===1)SFX.swing();else{(e.w===2?SFX.pistol:SFX.shotgun)(v);flashL.position.set(e.x,1.4,e.z);muzzleT=.06}}break;
   case 'hit':blood(e.x,1.3,e.z,8);SFX.hit();SFX.screech();break;
   case 'hkill':blood(e.x,1,e.z,20);SFX.scream(.8);break;
+  case 'drop':SFX.box();break;
   case 'boxup':if(e.id===PID())SFX.box();break;
   case 'restock':case 'cleaned':SFX.box();break;
   case 'hol':if(e.id===PID())SFX.click();break;
@@ -791,6 +801,7 @@ const nearBreaker=()=>Math.hypot(me.x-BRK[0],me.z-BRK[1])<1.6;
 const nearTerm=()=>Math.hypot(me.x-TERM[0],me.z-TERM[1])<1.6;
 const nearPallet=()=>Math.hypot(me.x-PALLET[0],me.z-PALLET[1])<1.5;
 const nearMop=()=>Math.hypot(me.x-MOP[0],me.z-MOP[1])<1.5;
+function nearDrop(){let m=null,bd=1.3;for(const d of S.drops||[]){const dd=Math.hypot(d.x-me.x,d.z-me.z);if(dd<bd){bd=dd;m=d}}return m}
 function nearMess(){let m=null,bd=1.5;for(const x of S.mess||[]){const d=Math.hypot(x.x-me.x,x.z-me.z);if(d<bd){bd=d;m=x}}return m}
 function nearDowned(){let t=null,bd=1.6;for(const k in S.players){const q=S.players[k];if(k!==PID()&&q.down&&!q.dead){const d=Math.hypot(q.x-me.x,q.z-me.z);if(d<bd){bd=d;t=q}}}return t}
 function movePlayer(dt){const p=S.players[PID()];if(!p)return;const dead=p.dead,down=p.down;
@@ -841,6 +852,7 @@ function interact(){const p=S.players[PID()];if(!p||p.dead)return;
  if(S.cust&&S.cust.st==='wait'&&nearCounter()){idOpen?closeID():openID();return}
  if(p.carry==='mop'&&nearMess()){act('clean');return}
  if(nearTerm()&&!p.carry){openShop();return}
+ if(!p.carry&&nearDrop()){act('pickup');return}
  if(nearMop()&&(!p.carry||p.carry==='mop')){act('mop');return}
  if(!p.carry&&nearPallet()){act('box');return}
  if(p.carry==='box'&&nearSec(me.x,me.z,true,S.stock)>=0){act('stock');return}}
@@ -855,6 +867,7 @@ addEventListener('keydown',e=>{K[e.code]=true;if(!joined||!S)return;
  if(!p||p.dead)return;
  if(e.code==='KeyE'||(e.code==='Escape'&&shopOpen)){if(shopOpen){closeShop(e.code==='KeyE');SFX.click();return}interact()}
  if(e.code==='KeyQ')act('hol');
+ if(e.code==='KeyG'){const pp=S.players[PID()];if(pp&&pp.carry&&!pp.down)act('drop')}
  const n=+e.code.replace('Digit','');
  if(shopOpen)return;
  if(e.code==='KeyR')act('reload');
@@ -897,10 +910,11 @@ function updateHUD(){const s=S,play=s.phase==='playing',p=s.players[PID()];
   else if(s.cust&&s.cust.st==='wait'&&nearCounter())pr=idOpen?'':'[E] CHECK ID &nbsp; [3][4][5] ASK &nbsp; [1] SERVE &nbsp; [2] REFUSE';
   else if(p.carry==='mop'&&nearMess())pr=p.cl?'CLEANING… STAY CLOSE':'[E] CLEAN UP';
   else if(nearTerm()&&!p.carry)pr='[E] OFFICE PC';
+  else if(!p.carry&&nearDrop()){const d=nearDrop();pr='[E] PICK UP '+(d.k==='mop'?'MOP':'STOCK BOX')}
   else if(nearMop()&&(!p.carry||p.carry==='mop'))pr=p.carry==='mop'?'[E] PUT MOP BACK':'[E] TAKE MOP';
   else if(!p.carry&&nearPallet())pr='[E] PICK UP STOCK BOX';
-  else if(p.carry==='box'){const i=nearSec(me.x,me.z,true,s.stock);pr=i>=0?'[E] RESTOCK '+SEC[i].n:'FIND A SHELF THAT ISN\'T FULL'}
-  else if(p.carry==='mop')pr='FIND THE MESS';
+  else if(p.carry==='box'){const i=nearSec(me.x,me.z,true,s.stock);pr=(i>=0?'[E] RESTOCK '+SEC[i].n:'FIND A SHELF THAT ISN\'T FULL')+' · [G] DROP BOX'}
+  else if(p.carry==='mop')pr='FIND THE MESS · [G] DROP MOP';
   else if(s.lightsOut)pr='<span style="color:#c33">FIND THE BREAKER — BACK ROOM</span>'}
  setH($('prompt'),pr);
  if(idOpen&&(!s.cust||s.cust.id!==idFor||s.cust.st!=='wait'||!nearCounter()||!play))closeID();
@@ -955,6 +969,11 @@ const DN=260,dustG=new THREE.BufferGeometry(),dp=new Float32Array(DN*3);for(let 
 dustG.setAttribute('position',new THREE.BufferAttribute(dp,3));const dustM=new THREE.PointsMaterial({color:0xfff4d8,size:.025,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false});scene.add(new THREE.Points(dustG,dustM));
 const puddleM=new THREE.MeshPhongMaterial({color:0x0a0c10,specular:0x8899aa,shininess:90});
 [[-2,9,1.4],[3.5,8.5,1],[0,14,1.8],[-4.5,14.5,1.1],[5,15,1.3],[-6.5,7,.9],[1.5,18,1.6],[-1,21,1.2]].forEach(([x,z,r])=>{const m=new THREE.Mesh(new THREE.CircleGeometry(r,14),puddleM);m.rotation.x=-Math.PI/2;m.position.set(x,.008,z);m.scale.set(1,rnd(.5,.9),1);scene.add(m)});
+/* ---------- blood trail decals ---------- */
+const decals=[];const decalM=[0x3a0404,0x4a0606,0x2a0202].map(c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.85,depthWrite:false}));
+function bloodDecal(x,z,r){const m=new THREE.Mesh(new THREE.CircleGeometry(r||rnd(.05,.12),7),pick(decalM));m.rotation.x=-Math.PI/2;m.position.set(x,.011+Math.random()*.002,z);m.scale.set(1,rnd(.6,1.2),1);scene.add(m);decals.push({m,t:40});if(decals.length>140){const o=decals.shift();scene.remove(o.m)}}
+function decalTick(dt){for(const d of decals){d.t-=dt;if(d.t<5)d.m.material.opacity=Math.max(0,d.t/5*.85)}while(decals.length&&decals[0].t<=0){scene.remove(decals.shift().m)}}
+
 /* ---------- 3D death sequence ---------- */
 let KILL=null;
 function startKill(){let best=null,bd=1e9;for(const k in hunterObjs){const g=hunterObjs[k].g,d=distTo(g.position.x,g.position.z);if(d<bd){bd=d;best=g}}
@@ -966,13 +985,13 @@ function killCam(dt){const K=KILL;K.t+=dt;const g=K.g;let hx=g?g.position.x:K.x-
  else if(K.t<1.25){if(!K.snap&&K.t>.5){K.snap=true;SFX.crunch()}const q=(K.t-.45)/.8;const lift=Math.sin(q*Math.PI*.5)*.45;
   camera.position.set(hx+fx*.7+rnd(-.04,.04),hy-.05+lift*.5+rnd(-.03,.03),hz+fz*.7+rnd(-.04,.04));camera.lookAt(hx,hy-.04,hz);camera.rotateZ(q*q*2.4+Math.sin(K.t*40)*.06*q);
   if(Math.random()<dt*4)blood(hx+fx*.35,hy-.3,hz+fz*.35,1);flashV=Math.max(flashV,.05+q*.18)}
- else{if(!K.rip){K.rip=true;SFX.rip();blood(hx+fx*.5,hy-.2,hz+fz*.5,24);flashV=1;K.y=camera.position.y;K.vy=1.6;K.tx=fx*1.4+rnd(-.5,.5);K.tz=fz*1.4+rnd(-.5,.5);K.rv=rnd(5,8)*(Math.random()<.5?-1:1);K.px=camera.position.x;K.pz=camera.position.z}
+ else{if(!K.rip){K.rip=true;SFX.rip();blood(hx+fx*.5,hy-.2,hz+fz*.5,24);for(let i=0;i<14;i++)bloodDecal(K.x+rnd(-1,1),K.z+rnd(-1,1),rnd(.06,.22));bloodDecal(K.x,K.z,.6);flashV=1;K.y=camera.position.y;K.vy=1.6;K.tx=fx*1.4+rnd(-.5,.5);K.tz=fz*1.4+rnd(-.5,.5);K.rv=rnd(5,8)*(Math.random()<.5?-1:1);K.px=camera.position.x;K.pz=camera.position.z}
   if(!K.land){K.vy-=12*dt;K.y+=K.vy*dt;K.px+=K.tx*dt;K.pz+=K.tz*dt;K.roll+=K.rv*dt;if(K.y<=.12){K.y=.12;if(Math.abs(K.vy)>2.5){K.vy=-K.vy*.3;K.rv*=.5;SFX.hit()}else{K.land=true;SFX.thud()}}}
   camera.position.set(K.px,K.y,K.pz);camera.lookAt(hx,K.land?hy*.75:K.y+Math.sin(K.roll)*1.5,hz);camera.rotateZ(K.land?1.35:K.roll);
   const f=clamp((K.t-2.1)/1.5,0,1);fadeV=Math.max(fadeV,f);if(K.t>4.2){KILL=null;fadeV=.6;showMsg('YOU\'RE DOWN. WAIT FOR A TEAMMATE TO REVIVE YOU.',4)}}}
 
 /* ---------- world update ---------- */
-const others={},hunterObjs={},messObjs={};let custObj=null,frame=0;
+const others={},hunterObjs={},messObjs={},dropObjs={};let custObj=null,frame=0;
 const poolM=new THREE.MeshLambertMaterial({color:0x4a0606}),poolM2=new THREE.MeshLambertMaterial({color:0x2a0303});
 function buildMess(m){const g=new THREE.Group();const pool=new THREE.Mesh(new THREE.CircleGeometry(m.body?.75:.4,10),poolM);pool.rotation.x=-Math.PI/2;pool.position.y=.012;pool.scale.set(1,rnd(.6,1),1);g.add(pool);
  for(let i=0;i<(m.body?7:3);i++){const sp=new THREE.Mesh(new THREE.CircleGeometry(rnd(.06,.16),6),poolM2);sp.rotation.x=-Math.PI/2;sp.position.set(rnd(-1.1,1.1),.014,rnd(-1.1,1.1));g.add(sp)}
@@ -1013,11 +1032,13 @@ function updateWorld(dt,now){const s=S,play=s.phase==='playing';
   o.g.userData.eye.intensity=h.st==='hunt'||h.st==='stare'?(s.lightsOut?.9:.25)*(.7+Math.random()*.3):0;
   const g=o.g,k=Math.min(1,dt*10),mv=Math.hypot(h.x-g.position.x,h.z-g.position.z);g.position.x+=(h.x-g.position.x)*k;g.position.z+=(h.z-g.position.z)*k;g.rotation.y=h.ry;
   if(h.st==='hunt')makeHunterLook(g);animChar(g,mv>.005,dt,h.st==='hunt'?'hunt':'');
-  if(h.st==='hunt'){const d=distTo(h.x,h.z);hd=Math.min(hd,d);if(mv>.01&&Math.random()<dt*3)SFX.step(clamp(3-d/4,0,3))}}
+  if(h.st==='hunt'){const u=g.userData;if((u.curse||0)>.5){u.dripT=(u.dripT||0)-dt;if(u.dripT<=0){u.dripT=rnd(.15,.45);const jp=new THREE.Vector3(0,.05,.12);u.neck.localToWorld(jp);blood(jp.x,jp.y,jp.z,1);if(mv>.005||Math.random()<.4)bloodDecal(g.position.x+rnd(-.2,.2),g.position.z+rnd(-.2,.2))}}const d=distTo(h.x,h.z);hd=Math.min(hd,d);if(mv>.01&&Math.random()<dt*3)SFX.step(clamp(3-d/4,0,3));if(d<9&&Math.random()<dt*1.2)SFX.squelch(clamp(1.2-d/8,.1,1))}}
  for(const id in hunterObjs)if(!seen[id]){scene.remove(hunterObjs[id].g);delete hunterObjs[id]}
  // messes
  const ms={};for(const m of s.mess||[]){ms[m.id]=1;if(!messObjs[m.id])messObjs[m.id]=buildMess(m)}
  for(const id in messObjs)if(!ms[id]){scene.remove(messObjs[id]);delete messObjs[id]}
+ const ds={};for(const d of s.drops||[]){ds[d.id]=1;if(!dropObjs[d.id]){let o;if(d.k==='mop'){o=mopMesh();o.rotation.set(0,d.r,0);o.position.set(d.x,.03,d.z);o.children.forEach(c=>c.rotation.x=Math.PI/2);o.rotation.y=d.r}else{o=new THREE.Mesh(new THREE.BoxGeometry(.42,.3,.32),crateM);o.position.set(d.x,.15,d.z);o.rotation.y=d.r}scene.add(o);dropObjs[d.id]=o}}
+ for(const id in dropObjs)if(!ds[id]){scene.remove(dropObjs[id]);delete dropObjs[id]}
  // doors
  const dl=s.door||'open';syncDoor();doors.forEach(d=>d.visible=dl!=='broken');lockLampM.color.set(dl==='locked'?0xff2020:dl==='broken'?0x222222:0x20c040);if(dl!=='broken'&&shards.length){shards.forEach(m=>scene.remove(m));shards.length=0}
  if(near.length&&doorOpen===0&&dl==='open'&&now-lastDoor>800){lastDoor=now;SFX.door()}doorOpen=clamp(doorOpen+(near.length?1:-1)*dt*2.5,0,1);if(S.door!=='open')doorOpen=0;const eo=doorOpen*doorOpen*(3-2*doorOpen);doors[0].position.x=-1.4-eo*.78;doors[1].position.x=-.6+eo*.78;
@@ -1036,6 +1057,7 @@ function updateWorld(dt,now){const s=S,play=s.phase==='playing';
  const redA=Math.max(flashV,downA,hd<10?(.3-hd*.03):0);$('red').style.background=fadeV>0?'rgba(0,0,0,'+fadeV+')':'rgba(140,0,0,'+redA+')';
  for(let i=0;i<DN;i++){dp[i*3+1]+=Math.sin(now/2000+i)*dt*.03;dp[i*3]+=Math.cos(now/2600+i*1.7)*dt*.02;if(dp[i*3+1]>2.95)dp[i*3+1]=.2}dustG.attributes.position.needsUpdate=true;dustM.opacity=s.lightsOut?.12:.5;
  if(hd<5&&!s.lightsOut&&Math.random()<dt*2)flickerT=Math.max(flickerT,.3);
+ decalTick(dt);
  rainTick(dt);return hd}
 
 /* ---------- loop ---------- */
